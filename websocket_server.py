@@ -1,10 +1,10 @@
 """Main websocket instance script"""
 
+import ssl
+import tools
 import asyncio
 import threading
 import websockets
-
-from tools import gen_random_id
 
 
 
@@ -42,6 +42,8 @@ class UserConn:
 
 
 class WsServer(threading.Thread):
+	""" client interconnection ws server instance"""
+
 	def __init__(self, host:str, port:int, msg_handler = None, ssl_context = None):
 		"""
 		Arguments:
@@ -60,6 +62,7 @@ class WsServer(threading.Thread):
 		self.msg_handler = msg_handler
 		self.connections = {}
 
+		self.task = None
 		self.stopped = True
 
 
@@ -82,7 +85,7 @@ class WsServer(threading.Thread):
 		if self.stopped:
 			return
 
-		ident = gen_random_id()
+		ident = tools.gen_random_id()
 		self.connections[ident] = UserConn(connection, ident = ident)
 
 		await self.process_messages(ident)
@@ -101,6 +104,8 @@ class WsServer(threading.Thread):
 
 		if self.ssl_context is not None:
 			kwargs['ssl'] = self.ssl_context
+
+		print(kwargs)
 
 
 		try:
@@ -132,8 +137,29 @@ class WsServer(threading.Thread):
 	def run(self):
 		"""Run the server thread"""
 
-		asyncio.run(self.start_task())
+		asyncio.run(self.start_serving_task())
 
+
+def start_server(host, port, use_ssl = False, ssl_certfile = None, ssl_keyfile = None):
+	"""Use this for tests"""
+
+	if use_ssl:
+		ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+		ssl_context.load_cert_chain(ssl_certfile, keyfile=ssl_keyfile)
+
+		server = WsServer(host, port, ssl_context = ssl_context)
+	else:
+		server = WsServer(host, port)
+
+	asyncio.run(server.serve())
+
+	# while server.stopped:
+	# 	time.sleep(.05)
+
+	#return server
+
+
+#Testing
 
 if __name__ == "__main__":
-	asyncio.run(WsServer("127.0.0.1", "43758").serve())
+	start_server(**tools.load_server_config()) #asyncio.run(WsServer("127.0.0.1", "43758").serve())

@@ -1,0 +1,7 @@
+{
+	"HOST":"localhost",
+	"PORT":43758,
+	"use_ssl":true,
+	"ssl_certfile":"example_cert.pem",
+	"ssl_keyfile":"example_key.pem"
+}
