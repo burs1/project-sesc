@@ -7,6 +7,10 @@ import threading
 import websockets
 
 
+# uncomment for linux systems
+#import resource
+
+
 
 class UserConn:
 	""" User connection insance """
@@ -25,8 +29,11 @@ class UserConn:
 		self.connection_is_opened = True
 
 
-	async def send_message(self, msg:str):
+	async def send(self, msg):
 		""" Message sending """
+
+		if not isinstance(msg, (dict, str)):
+			msg = str(msg)
 
 		await self.connection.send(msg)
 
@@ -65,6 +72,9 @@ class WsServer(threading.Thread):
 		self.task = None
 		self.stopped = True
 
+		# uncomment to increase connection limit (ONLY FOR LINUX)
+		# resource.setrlimit(resource.RLIMIT_NOFILE, (2**18, 2**18))
+
 
 	async def process_messages(self, ident:str):
 		""" Handle incoming messages """
@@ -73,7 +83,8 @@ class WsServer(threading.Thread):
 				if self.stopped:
 					return
 
-				await self.connections[ident].send_message(f"ECHO: {str(message)}")
+				await self.msg_handler(message, ident)
+				#await self.connections[ident].send_message(f"ECHO: {str(message)}")
 
 		except websockets.exceptions.ConnectionClosedError:
 			self.connections[ident].connection_is_opened = False
@@ -127,7 +138,7 @@ class WsServer(threading.Thread):
 		await self.task
 
 
-	def stop_task(self):
+	def stop_server(self):
 		""" Hard reset server """
 
 		self.task.cancel()
@@ -140,18 +151,22 @@ class WsServer(threading.Thread):
 		asyncio.run(self.start_serving_task())
 
 
-def start_server(host, port, use_ssl = False, ssl_certfile = None, ssl_keyfile = None):
+def start_server(host, port, use_ssl = False, ssl_certfile = None, ssl_keyfile = None, msg_handler = None):
 	"""Use this for tests"""
 
 	if use_ssl:
 		ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 		ssl_context.load_cert_chain(ssl_certfile, keyfile=ssl_keyfile)
 
-		server = WsServer(host, port, ssl_context = ssl_context)
+		server = WsServer(host, port, ssl_context = ssl_context, msg_handler = msg_handler)
 	else:
-		server = WsServer(host, port)
+		server = WsServer(host, port, msg_handler=msg_handler)
 
-	asyncio.run(server.serve())
+	server.start()
+	print('udfg')
+	return server
+
+	#asyncio.run(server.serve())
 
 	# while server.stopped:
 	# 	time.sleep(.05)

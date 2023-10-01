@@ -18,7 +18,7 @@
 ### Responses structure:
 `{int:status_code}/{flag}/{subflag}/*all_other_data_from_responces`
 *braces define insertion, it is not a part of request, same as "data_type:"*
-*`example`: `200/misc/create_session/6fe3110cca4/`*
+*`example`: `1/misc/create_session/6fe3110cca4/`*
 
 
 

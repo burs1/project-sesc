@@ -1,3 +1,5 @@
 # Python >= 3.11
 
+resource
 websockets
+websocket-client
