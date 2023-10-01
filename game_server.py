@@ -94,7 +94,7 @@ class GameServer:
 		try:
 			if message['flag'] == 'misc':
 				if message['subflag'] == 'ping':
-					responce = time.time()
+					responce = (200, (str(time.time()),))
 				elif message['subflag'] == 'registration':
 					responce = self.reg_user(args = message['args'], sender_id = sender_id)
 		except Exception as e:
