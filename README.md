@@ -9,10 +9,10 @@
 
 
 ### Responce status codes:
-`200` - success
+`200` - responce to ping
 `400` - bad request
+`1` - success
 `0` - request had been failed
-`1` - responce to ping
 
 
 ### Responses structure:
@@ -22,7 +22,7 @@
 
 
 
-### Request Flags:
+### User request flags:
 #### `misc` (subflags):
 -	`ping`:
 	-	Responses:
@@ -56,5 +56,16 @@
 -	`disconnect_from_session`:
 	-	Responses:
 		-	`[only status code]`
+
+
+
+### Server request flags:
+#### `misc` (subflags):
+-	`ping`:
+-	-	required responce:
+			- `{int:1}`
+	-	if no respoce:
+			- `disconnecting user from server`
+
 
 
