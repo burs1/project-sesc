@@ -7,7 +7,7 @@ using namespace engine::math;
 namespace engine::gfx {
   Renderer::Renderer(Window* window, vec3 &campos, vec3 &camrot)
     : _window(window), campos(campos), camrot(camrot) {
-      set_perspective(90, 0.1f, 1000);
+      set_perspective(70, 0.1f, 1000);
   }
 
   Renderer::~Renderer() {
@@ -40,9 +40,8 @@ namespace engine::gfx {
   }
 
   auto Renderer::render() -> void {
-    matrix4x4 viewmat, camrotmat;
-    camrotmat.set_rot(camrot);
-    viewmat.look_at(campos, campos + vec3(0, 0, 1) * camrotmat, vec3(0, 1, 0));
+    //matrix4x4 viewmat;
+    //viewmat.look_at(campos + vec3(0, -1, 0), campos + vec3(0, 0, 1), vec3(0, 1, 0));
 
     for(auto [meshname, pos, rot] : _meshesToDraw) {
       // Prepare matricies
@@ -55,7 +54,6 @@ namespace engine::gfx {
       worldmat *= rotmat;
       worldmat *= transmat;
 
-    
       mesh *mesh = _meshes[meshname];
 
       // Draw faces
@@ -65,7 +63,7 @@ namespace engine::gfx {
         // Transform, view and project verticies
         for(int i = 0; i < 3; ++i) {
           curVerts[i] *= worldmat;
-          curVerts[i] *= viewmat;
+          //curVerts[i] *= viewmat;
           curVerts[i] = curVerts[i] * _projmat;
         }
 

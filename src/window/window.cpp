@@ -3,6 +3,7 @@
 #include <SDL_error.h>
 #include <SDL_stdinc.h>
 #include <iostream>
+#include <sdl_ttf.h>
 #include <stdexcept>
 
 using namespace std;
@@ -54,7 +55,7 @@ namespace engine {
     _sprites.clear();
 
     // Unload all fonts
-    for (auto [name, fnt] : _fonts) { delete fnt; }
+    for (auto [name, fnt] : _fonts) { TTF_CloseFont(fnt); }
     _fonts.clear();
 
     SDL_DestroyRenderer(_renderer);
@@ -69,7 +70,9 @@ namespace engine {
   // ~ main
   auto Window::update_events() -> void {
     SDL_Event e;
-    while(SDL_PollEvent(&e)) {}
+    while(SDL_PollEvent(&e)) {
+      if (e.type == SDL_QUIT) { _isOpened = false; }
+    }
 
     _inputs = SDL_GetKeyboardState(NULL);
   }

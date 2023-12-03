@@ -125,25 +125,29 @@ namespace engine::math {
 
   /// Set persprective
   auto matrix4x4::set_perspective(float fov, float aspratio, float near, float far) -> void {
-    float fovrad = 1.0f / tanf(fov / 2 / 180 * 3.14159f);
+    float fovrad = 1.0f / tanf( (fov / 2) * (3.14159f / 180) );
 		m[0][0] = aspratio * fovrad;
 		m[1][1] = fovrad;
 		m[2][2] = far / (far - near);
 		m[2][3] = 1.0f;
-		m[3][2] = (-near * far) / (far - near);
+		m[3][2] = -near * m[2][2];
 		m[3][3] = 0.0f;
 	}
   
   /// Make proj matrix
   auto matrix4x4::point_at(const vec3 &from, const vec3 &to, const vec3 &up) -> void {
-    vec3 newforward = vec3::normalized(to - from);
-    vec3 newup = vec3::normalized(up - newforward * vec3::dot(up, newforward));
+    vec3 newforward = to - from;
+    newforward.normalize();
+
+    vec3 newup = up - newforward * vec3::dot(up, newforward);
+    newup.normalize();
+
     vec3 newright = vec3::cross(newup, newforward);
 
-    m[0][0] = newright.x; m[0][1] = newright.y; m[0][2] = newright.z;
-    m[1][0] = newup.x; m[1][1] = newup.y; m[1][2] = newup.z;
-    m[2][0] = newforward.x; m[2][1] = newforward.y; m[2][2] = newforward.z;
-    m[3][0] = from.x; m[3][1] = from.y; m[3][2] = from.z;
+    m[0][0] = newright.x;   m[0][1] = newright.y;   m[0][2] = newright.z;   m[0][3] = 0.0f;
+    m[1][0] = newup.x;      m[1][1] = newup.y;      m[1][2] = newup.z;      m[1][3] = 0.0f;
+    m[2][0] = newforward.x; m[2][1] = newforward.y; m[2][2] = newforward.z; m[2][3] = 0.0f;
+    m[3][0] = from.x;       m[3][1] = from.y;       m[3][2] = from.z;       m[3][3] = 1.0f;
   }
 
   /// Make look at matrix
@@ -159,11 +163,11 @@ namespace engine::math {
 		res.m[1][0] = m[0][1]; res.m[1][1] = m[1][1]; res.m[1][2] = m[2][1]; res.m[1][3] = 0.0f;
 		res.m[2][0] = m[0][2]; res.m[2][1] = m[1][2]; res.m[2][2] = m[2][2]; res.m[2][3] = 0.0f;
 
-		res.m[3][0] = -(m[3][0] * res.m[0][0] + m[3][1] * res.m[1][0] + m[3][2] * res.m[2][0]);
+    res.m[3][0] = -(m[3][0] * res.m[0][0] + m[3][1] * res.m[1][0] + m[3][2] * res.m[2][0]);
 		res.m[3][1] = -(m[3][0] * res.m[0][1] + m[3][1] * res.m[1][1] + m[3][2] * res.m[2][1]);
 		res.m[3][2] = -(m[3][0] * res.m[0][2] + m[3][1] * res.m[1][2] + m[3][2] * res.m[2][2]);
 
-		res.m[3][3] = 1.0f;
+    res.m[3][3] = 1.0f;
 
 		_copy(res);
   }

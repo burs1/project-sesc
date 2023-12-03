@@ -29,12 +29,12 @@ private:
     float yawAxis = input_axis(SDL_SCANCODE_Q, SDL_SCANCODE_E);
 
     // velocity change
-    rotVel.x = lerp(rotVel.x, tiltAxis * rotSp, rotAcc * deltaTime);
-    rotVel.y = lerp(rotVel.y, yawAxis * rotSp, rotAcc * deltaTime);
-    rotVel.z = lerp(rotVel.z, rollAxis * rotSp, rotAcc * deltaTime);
+    rotVel.y = lerp(rotVel.y, tiltAxis * rotSp, rotAcc * deltaTime);
+    rotVel.z = lerp(rotVel.z, yawAxis * rotSp, rotAcc * deltaTime);
+    rotVel.x = lerp(rotVel.x, rollAxis * rotSp, rotAcc * deltaTime);
 
     // rotate
-    rot += rotVel * deltaTime;
+    pos += rotVel * deltaTime;
   }
 
   void on_draw() override {
@@ -74,15 +74,15 @@ int main (int argc, char *argv[]) {
   window->set_font("super");
   window->set_draw_color(57, 156, 255, 255);
 
-  while (lastUpdateTime < 20000) {
+  while (window->isOpened) {
     // Hold update untill it's time
     Uint32 currentTime = window->get_ticks();
     if (currentTime < nextUpdateTime) { continue; }
 
+    deltaTime = (currentTime - lastUpdateTime) / 1000.0f;
+
     lastUpdateTime = currentTime;
     nextUpdateTime = currentTime - currentTime % updateDelay + updateDelay;
-
-    float timeScaled = currentTime / 1000.0f;
 
     window->update_events();
 

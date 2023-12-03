@@ -83,6 +83,6 @@ namespace engine {
     int _w, _h, _resw, _resh;
 
     bool _fullscreen;
-    bool _isOpened;
+    bool _isOpened = true;
   };
 }
