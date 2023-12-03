@@ -40,24 +40,32 @@ namespace engine::gfx {
   }
 
   auto Renderer::render() -> void {
-    for(auto [meshname, pos, rot] : _meshesToDraw) {
-      mesh *mesh = _meshes[meshname];
+    matrix4x4 viewmat, camrotmat;
+    camrotmat.set_rot(camrot);
+    viewmat.look_at(campos, campos + vec3(0, 0, 1) * camrotmat, vec3(0, 1, 0));
 
-      matrix4x4 rotmatX, rotmatY, rotmatZ;
-      rotmatX.set_rotX(rot.x);
-      rotmatY.set_rotY(rot.y);
-      rotmatZ.set_rotZ(rot.z);
+    for(auto [meshname, pos, rot] : _meshesToDraw) {
+      // Prepare matricies
+      matrix4x4 rotmat, transmat, worldmat;
+
+      rotmat.set_rot(rot);
+      transmat.set_translation(pos);
+
+      worldmat.set_identity();
+      worldmat *= rotmat;
+      worldmat *= transmat;
+
+    
+      mesh *mesh = _meshes[meshname];
 
       // Draw faces
       for(auto [p1, p2, p3] : mesh->faces) {
         vec3 curVerts[] = {mesh->verts[p1], mesh->verts[p2], mesh->verts[p3]};
 
-        // Rotate, translate and project verticies
+        // Transform, view and project verticies
         for(int i = 0; i < 3; ++i) {
-          curVerts[i] *= rotmatX;
-          curVerts[i] *= rotmatY;
-          curVerts[i] *= rotmatZ;
-          curVerts[i] += pos;
+          curVerts[i] *= worldmat;
+          curVerts[i] *= viewmat;
           curVerts[i] = curVerts[i] * _projmat;
         }
 
@@ -75,14 +83,14 @@ namespace engine::gfx {
           curVerts[i].y += 1;
 
           curVerts[i].x *= 0.5 * _window->resw;
-          curVerts[i].y *= 0.5 * _window->resh;
+          curVerts[i].y *= -0.5 * _window->resh;
         }
 
         // Draw lines
         for (int i = 0; i < 3; ++i)
           _window->draw_line(
-            curVerts[i].x, _window->resh - curVerts[i].y,
-            curVerts[(i + 1)%3].x, _window->resh - curVerts[(i + 1)%3].y
+            curVerts[i].x, _window->resh + curVerts[i].y,
+            curVerts[(i + 1)%3].x, _window->resh + curVerts[(i + 1)%3].y
           );
       }
     }

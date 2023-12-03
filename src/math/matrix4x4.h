@@ -25,7 +25,7 @@ namespace engine::math {
     auto set_identity()                  -> void;
 
     /// Set translation by vector
-    auto set_translation(const vec3&) -> void;
+    auto set_translation(const vec3&)    -> void;
 
     /// Return translation vector
     auto get_translation()               -> vec3;
@@ -60,14 +60,28 @@ namespace engine::math {
     /// Set perspective 
     auto set_perspective(float, float, float, float) -> void;
 
+    /// Make point at matrix
+    auto point_at(const math::vec3&, const math::vec3&, const math::vec3&)  -> void;
+
+    /// Make look at matrix
+    auto look_at(const math::vec3&, const math::vec3&, const math::vec3&)   -> void;
+
+    /// Inverse
+    auto inverse() -> void; 
+
     // === Overloads ===
+    /// Mult
+    auto operator*=(const matrix4x4&) -> void;
+    
+    auto operator*(const matrix4x4&)  -> matrix4x4;
+
     /// Copy
-    auto operator=(const matrix4x4&)    -> void;
+    auto operator=(const matrix4x4&)  -> void;
 
     float m[4][4];
 
   private:
     /// Copy m from other matrix
-    auto __copy__(const matrix4x4&)     -> void;
+    auto _copy(const matrix4x4&)   -> void;
   };
 }

@@ -1,3 +1,4 @@
+#include <SDL_scancode.h>
 #include <charconv>
 #include <cmath>
 #include <string>
@@ -70,13 +71,10 @@ int main (int argc, char *argv[]) {
   Uint32 lastUpdateTime = window->get_ticks();
   Uint32 nextUpdateTime = window->get_ticks();
 
-  vec3 shippos(0, 0, 8);
-  vec3 shiprot(0, 0, 0);
-
   window->set_font("super");
   window->set_draw_color(57, 156, 255, 255);
 
-  while (lastUpdateTime < 10000) {
+  while (lastUpdateTime < 20000) {
     // Hold update untill it's time
     Uint32 currentTime = window->get_ticks();
     if (currentTime < nextUpdateTime) { continue; }
@@ -87,6 +85,10 @@ int main (int argc, char *argv[]) {
     float timeScaled = currentTime / 1000.0f;
 
     window->update_events();
+
+    campos.x += window->input_axis(SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT);
+    campos.y += window->input_axis(SDL_SCANCODE_DOWN, SDL_SCANCODE_UP);
+
     scene->update();
     renderer->render();
 
