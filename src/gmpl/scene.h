@@ -1,10 +1,8 @@
 #pragma once
 
-#include <SDL_scancode.h>
 #include <map>
 #include <vector>
 #include <string>
-#include "camera.h"
 #include "window.h"
 #include "entity.h"
 #include "renderer.h"
@@ -30,9 +28,6 @@ namespace engine::gmpl {
       _initialize_entity(entity, meshname, typeid(entity).name(), tag);
       return entity;
     }
-
-    // ~ camera
-    auto get_camera() -> Camera*;
 
 
     // ~ input
@@ -74,8 +69,6 @@ namespace engine::gmpl {
 
 
     // - Variables -----------------------
-    Camera _camera;
-
     Window *_window;
     gfx::Renderer *_renderer;
 

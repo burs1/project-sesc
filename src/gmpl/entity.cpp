@@ -10,13 +10,6 @@ namespace engine::gmpl {
     return _scene->deltaTime;
   }
 
-
-  // ~ camera
-  auto Entity::get_camera() -> Camera* {
-    return _scene->get_camera();
-  }
-
-
   // ~ input
   auto Entity::input_check(SDL_Scancode keycode) -> bool {
     return _scene->input_check(keycode);

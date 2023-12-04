@@ -4,7 +4,6 @@
 #include <string>
 #include "mesh.h"
 #include "scene.h"
-#include "camera.h"
 #include <stdexcept>
 
 namespace engine::gmpl {
@@ -19,9 +18,6 @@ namespace engine::gmpl {
     // - Methods -------------------------
     auto get_delta_time() -> float;
     
-
-    // ~ camera
-    auto get_camera() -> Camera*;
 
     // ~ input
     auto input_check(SDL_Scancode) -> bool;

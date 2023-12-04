@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sdl.h"
+#include <sdl.h>
 
 namespace engine::window {
   class Sprite {
@@ -9,17 +9,15 @@ namespace engine::window {
 
     ~Sprite();
 
-    // - Variables -----------------------
+    // vars
     SDL_Texture* const &texture;
     const SDL_Rect &rect;
     const int &x, &y, &w, &h;
 
-
   private:
-    // - Variables -----------------------
+    // vars
     SDL_Texture* m_texture;
     SDL_Rect m_rect{0, 0, 0, 0};
-
 
   };
 }

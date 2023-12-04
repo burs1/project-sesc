@@ -1,5 +1,5 @@
 # vars
-set(SOURCE_FILES entity.cpp scene.cpp camera.cpp)
+set(SOURCE_FILES entity.cpp scene.cpp)
 set(INCLUDE_DIRS . ../gfx ../math ../window)
 
 # add lib 

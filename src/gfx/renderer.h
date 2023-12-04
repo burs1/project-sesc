@@ -12,7 +12,7 @@ namespace engine::gfx {
 
   class Renderer {
   public:
-    Renderer(Window*, math::vec3&, math::vec3&);
+    Renderer(Window*);
 
     ~Renderer();
 
@@ -24,18 +24,22 @@ namespace engine::gfx {
     auto load_mesh(const char*, const char*)            -> void;
 
     // ~ draw
+    auto set_camera_transform(math::vec3, math::vec3)   -> void;
+
     auto render_add_mesh(const char*, math::vec3, math::vec3) -> void;
 
     auto render() -> void;
 
   private:
     struct rend_info {
-      const char *meshname;
+      mesh *mesh;
       math::vec3 pos, rot;
     };
 
+
+    // vars
     Window *_window;
-    math::vec3 &campos, &camrot;
+    struct { math::vec3 pos, rot; } _cam;
 
     std::map< const char*, mesh* > _meshes;
 

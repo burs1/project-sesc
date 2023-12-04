@@ -54,7 +54,7 @@ int main (int argc, char *argv[]) {
 
   // Init systems
   Window *window = new Window("starfighters", 320, 180, 1280, 720);
-  Renderer *renderer = new Renderer(window, campos, camrot);
+  Renderer *renderer = new Renderer(window);
   float deltaTime = 0.016;
 
   Scene *scene = new Scene(window, renderer, deltaTime);
@@ -92,6 +92,7 @@ int main (int argc, char *argv[]) {
     camrot.y += window->input_axis(SDL_SCANCODE_J, SDL_SCANCODE_L) * deltaTime;
 
     scene->update();
+    renderer->set_camera_transform(campos, camrot);
     renderer->render();
 
     window->update_surface();

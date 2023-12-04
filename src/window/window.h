@@ -3,7 +3,6 @@
 #include <map>
 #include <sdl.h>
 #include <string>
-#include <cassert>
 #include "sprite.h"
 #include <stdexcept>
 #include <sdl_ttf.h>
@@ -22,10 +21,8 @@ namespace engine {
 
     auto update_surface()                           -> void;
 
-
     // ~ window
     auto toggle_fullscreen()                        -> void;
-
 
     // ~ user
     auto get_ticks()                                -> Uint32;
@@ -35,12 +32,10 @@ namespace engine {
 
     auto input_axis(SDL_Scancode, SDL_Scancode)     -> int;
 
-
     // ~ resources
     auto load_sprite(const char*, const char*) -> void;
 
     auto load_font(const char*, int size, const char*)   -> void;
-
 
     // ~ draw
     auto set_draw_color(Uint8, Uint8, Uint8, Uint8)                             -> void;
@@ -56,7 +51,6 @@ namespace engine {
     auto draw_sprite(const char*, int, int, float, float)                       -> void;
     
     auto draw_sprite_ex(const char*, int, int, float, float, float, int, int)   -> void;
-
 
     const bool &isOpened;
     const int &w, &h, &resw, &resh;

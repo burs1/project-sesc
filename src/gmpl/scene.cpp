@@ -25,13 +25,6 @@ namespace engine::gmpl {
     // Draw all entities
     for (auto entity : _entitiesByType["all"]) { entity->on_draw(); }
   }
-
-
-  // ~ camera
-  auto Scene::get_camera() -> Camera* {
-    return &_camera;
-  }
-
   
   // ~ input
   auto Scene::input_check(SDL_Scancode keycode) -> bool {

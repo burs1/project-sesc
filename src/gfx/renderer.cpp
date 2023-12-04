@@ -5,8 +5,8 @@ using namespace std;
 using namespace engine::math;
 
 namespace engine::gfx {
-  Renderer::Renderer(Window* window, vec3 &campos, vec3 &camrot)
-    : _window(window), campos(campos), camrot(camrot) {
+  Renderer::Renderer(Window* window)
+    : _window(window) {
       set_perspective(70, 0.1f, 1000);
   }
 
@@ -35,16 +35,20 @@ namespace engine::gfx {
 
 
   // ~ draw
+  auto Renderer::set_camera_transform(vec3 pos, vec3 rot) -> void {
+    _cam.pos = pos; _cam.rot = rot;
+  }
+
   auto Renderer::render_add_mesh(const char* meshname, vec3 pos, vec3 rot) -> void {
-    _meshesToDraw.push_back( rend_info{meshname, pos, rot} );
+    _meshesToDraw.push_back( rend_info{_meshes[meshname], pos, rot} );
   }
 
   auto Renderer::render() -> void {
     matrix4x4 viewmat, viewrotmat;
-    viewrotmat.set_rot(camrot);
-    viewmat.look_at(campos, campos + vec3(0, 0, 1) * viewrotmat, _projmat.up());
+    viewrotmat.set_rot(_cam.rot);
+    viewmat.look_at(_cam.pos, _cam.pos + vec3(0, 0, 1) * viewrotmat, _projmat.up());
 
-    for(auto [meshname, pos, rot] : _meshesToDraw) {
+    for(auto [mesh, pos, rot] : _meshesToDraw) {
       // Prepare matricies
       matrix4x4 rotmat, transmat, worldmat;
 
@@ -54,8 +58,6 @@ namespace engine::gfx {
       worldmat.set_identity();
       worldmat *= rotmat;
       worldmat *= transmat;
-
-      mesh *mesh = _meshes[meshname];
 
       // Draw faces
       for(auto [p1, p2, p3] : mesh->faces) {
