@@ -40,8 +40,9 @@ namespace engine::gfx {
   }
 
   auto Renderer::render() -> void {
-    //matrix4x4 viewmat;
-    //viewmat.look_at(campos + vec3(0, -1, 0), campos + vec3(0, 0, 1), vec3(0, 1, 0));
+    matrix4x4 viewmat, viewrotmat;
+    viewrotmat.set_rot(camrot);
+    viewmat.look_at(campos, campos + vec3(0, 0, 1) * viewrotmat, _projmat.up());
 
     for(auto [meshname, pos, rot] : _meshesToDraw) {
       // Prepare matricies
@@ -63,7 +64,7 @@ namespace engine::gfx {
         // Transform, view and project verticies
         for(int i = 0; i < 3; ++i) {
           curVerts[i] *= worldmat;
-          //curVerts[i] *= viewmat;
+          curVerts[i] *= viewmat;
           curVerts[i] = curVerts[i] * _projmat;
         }
 

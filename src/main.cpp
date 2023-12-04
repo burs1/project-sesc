@@ -62,7 +62,7 @@ int main (int argc, char *argv[]) {
   // Load assets
   window->load_sprite("assets/logo.png", "logo");
   window->load_font("assets/superstar.ttf", 16, "super");
-  renderer->load_mesh("assets/cube.obj", "ship");
+  renderer->load_mesh("assets/ship.obj", "ship");
 
   scene->instantiate_entity<Ship>("ship");
 
@@ -72,7 +72,7 @@ int main (int argc, char *argv[]) {
   Uint32 nextUpdateTime = window->get_ticks();
 
   window->set_font("super");
-  window->set_draw_color(57, 156, 255, 255);
+  window->set_draw_color(156, 156, 255, 255);
 
   while (window->isOpened) {
     // Hold update untill it's time
@@ -86,8 +86,10 @@ int main (int argc, char *argv[]) {
 
     window->update_events();
 
-    campos.x += window->input_axis(SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT);
-    campos.y += window->input_axis(SDL_SCANCODE_DOWN, SDL_SCANCODE_UP);
+    campos.x += window->input_axis(SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT) * deltaTime;
+    campos.y += window->input_axis(SDL_SCANCODE_DOWN, SDL_SCANCODE_UP) * deltaTime;
+    camrot.x += window->input_axis(SDL_SCANCODE_K, SDL_SCANCODE_I) * deltaTime;
+    camrot.y += window->input_axis(SDL_SCANCODE_J, SDL_SCANCODE_L) * deltaTime;
 
     scene->update();
     renderer->render();
