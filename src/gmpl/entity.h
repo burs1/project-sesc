@@ -20,10 +20,14 @@ namespace engine::gmpl {
     
 
     // ~ input
-    auto input_check(SDL_Scancode) -> bool;
+    auto input_check(SDL_Scancode)                      -> bool;
 
-    auto input_axis(SDL_Scancode, SDL_Scancode) -> int;
+    auto input_axis(SDL_Scancode, SDL_Scancode)         -> int;
 
+    auto get_mouse_pos(int&, int&, bool centered=false) -> void;
+    
+    // ~ camera
+    auto set_camera_transform(const math::vec3&, const math::vec3&) -> void;
 
     // ~ entities
     /*template<class T>

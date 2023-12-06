@@ -19,6 +19,15 @@ namespace engine::gmpl {
     return _scene->input_axis(l, r);
   }
 
+  auto Entity::get_mouse_pos(int &x, int &y, bool centered) -> void {
+    _scene->get_mouse_pos(x, y, centered);
+  }
+
+  // ~ camera
+  auto Entity::set_camera_transform(const vec3 &pos, const vec3 &rot) -> void {
+    _scene->set_camera_transform(pos, rot);
+  }
+
 
   // ~ entities
   auto Entity::find_entity_by_type(const char *type, int n) -> Entity* {

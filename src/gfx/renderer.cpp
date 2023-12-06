@@ -9,6 +9,7 @@ namespace engine::gfx {
   Renderer::Renderer(Window* window)
     : _window(window) {
       set_perspective(70, 0.1f, 1000);
+      set_sun_direction(vec3(1, 1, 1));
   }
 
   Renderer::~Renderer() {
@@ -24,6 +25,10 @@ namespace engine::gfx {
     _projmat.set_perspective(fov, aspratio, near, far);
   }
 
+  auto Renderer::set_sun_direction(const math::vec3 &dir) -> void {
+    _sundir = dir;
+    _sundir.normalize();
+  }
 
   // ~ resources
   auto Renderer::load_mesh(const char *path, const char *name) -> void {
@@ -47,95 +52,95 @@ namespace engine::gfx {
 
   auto Renderer::render() -> void {
     matrix4x4 viewmat = _calc_view_matrix();
-    vector<face> facesToDraw;
-
-    // Render meshes
-    for(auto &[mesh, pos, rot] : _meshesToDraw) {
-      matrix4x4 transfmat = _calc_transform_matrix(pos, rot);
-
-      // Transform verticies
-      vec3 *transformedVerts = new vec3[mesh->verts.size()];
-      for (int i = 0; i < mesh->verts.size(); ++i)
-        transformedVerts[i] = mesh->verts[i] * transfmat;
-
-      // Viewed verticies
-      vec3 *viewedVerts = new vec3[mesh->verts.size()];
-      for (int i = 0; i < mesh->verts.size(); ++i)
-        viewedVerts[i] = transformedVerts[i] * viewmat;
-
-      // Projected verticies
-      vec3 *projectedVerts = new vec3[mesh->verts.size()];
-      for (int i = 0; i < mesh->verts.size(); ++i)
-        projectedVerts[i] = viewedVerts[i] * _projmat;
-
-      // Filter faces
-      for(auto &face : mesh->faces) {
-        vec3 vverts[] = {
-          viewedVerts[face.verts[0]],
-          viewedVerts[face.verts[1]],
-          viewedVerts[face.verts[2]]
-        };
-
-        // Skip if normal look in other direction
-        vec3 nrml = vec3::cross(vverts[2] - vverts[0], vverts[2] - vverts[1]);
-        nrml.normalize();
-
-        if (vec3::dot(nrml, vec3::normalized(vverts[0])) >= 0.0f) { continue; }
-
-        // Push face
-        facesToDraw.push_back(face);
-      }
-
-      _sort_faces_by_distance(&facesToDraw, viewedVerts);
-
-      // Draw faces on screen
-      for (auto &face : facesToDraw) {
-        vec3 tverts[] = {
-          transformedVerts[face.verts[0]],
-          transformedVerts[face.verts[1]],
-          transformedVerts[face.verts[2]]
-        };
-
-        vec3 verts[] = {
-          projectedVerts[face.verts[0]],
-          projectedVerts[face.verts[1]],
-          projectedVerts[face.verts[2]]
-        };
-
-        // Scale to screen
-        for(int i = 0; i < 3; ++i) {
-          verts[i].x += 1;
-          verts[i].y += 1;
-
-          verts[i].x *= 0.5 * _window->resw;
-          verts[i].y *= -0.5 * _window->resh;
-          verts[i].y += _window->resh;
-        }
-
-        // Calc light
-        vec3 nrml = vec3::cross(tverts[2] - tverts[0], tverts[2] - tverts[1]);
-        nrml.normalize();
-
-        vec3 sundir{1, 1, 1}; 
-        sundir.normalize();
-        float lightk = (1 + vec3::dot(nrml, sundir)) / 2;
-
-        _window->set_draw_color(255 * lightk, 255 * lightk, 255 * lightk, 255);
-
-        // Draw lines
-        _window->draw_triangle(
-          verts[0].x, verts[0].y,
-          verts[1].x, verts[1].y,
-          verts[2].x, verts[2].y
-        );
-      }
-      facesToDraw.clear();
-    }
+    for(auto [mesh, pos, rot] : _meshesToDraw) { _render_mesh(mesh, pos, rot, viewmat); }
     _meshesToDraw.clear();
   }
 
   // internal methods
   // ~ render
+  auto Renderer::_render_mesh(const mesh *mesh, const vec3 &pos, const vec3 &rot, const matrix4x4 &viewmat) -> void {
+    matrix4x4 transfmat = _calc_transform_matrix(pos, rot);
+    std::vector<face> facesToDraw;
+    
+    vec3 *transfVerts = new vec3[mesh->verts.size()];
+
+    // Filter faces
+    for (auto [vertsInds, clr] : mesh->faces) {
+      vec3 verts[] = {
+        mesh->verts[vertsInds[0]],
+        mesh->verts[vertsInds[1]],
+        mesh->verts[vertsInds[2]]
+      };
+
+      // Translate and rot verts
+      for (int i = 0; i < 3; ++i) { verts[i] *= transfmat; }
+
+      // calc light
+      vec3 nrml = vec3::cross(verts[1] - verts[0], verts[2] - verts[0]);
+      nrml.normalize();
+      float lightk = (1 + vec3::dot(nrml, _sundir)) / 2;
+      
+      // Transform verts to view perspective
+      for (int i = 0; i < 3; ++i) { verts[i] *= viewmat; }
+
+      // Skip face if it's normal points at opposite side
+      nrml = vec3::cross(verts[1] - verts[0], verts[2] - verts[0]);
+      nrml.normalize();
+      if (vec3::dot(nrml, viewmat.forward()) > 0.0f) { continue; }
+
+      // copy verts
+      for (int i = 0; i < 3; ++i) { transfVerts[vertsInds[i]] = verts[i]; }
+
+      facesToDraw.push_back( face{
+        {vertsInds[0], vertsInds[1], vertsInds[2]},
+        {int(clr[0] * lightk), int(clr[1] * lightk), int(clr[2] * lightk)}
+      });
+    }
+
+    // sort faces
+    sort(
+      facesToDraw.begin(),
+      facesToDraw.end(),
+      [=](face &f1, face &f2) {
+        float z1 = transfVerts[f1.verts[0]].z;// + transfVerts[f1.verts[1]].z + transfVerts[f1.verts[2]].z;
+        float z2 = transfVerts[f2.verts[0]].z;// + transfVerts[f2.verts[2]].z + transfVerts[f2.verts[2]].z;
+        return z1 > z2;
+      }
+    );
+
+    // Draw faces
+    for (auto [vertsInds, clr] : facesToDraw) {
+      vec3 verts[] = {
+        transfVerts[vertsInds[0]],
+        transfVerts[vertsInds[1]],
+        transfVerts[vertsInds[2]]
+      };
+
+      // project verts
+      for (int i = 0; i < 3; ++i) {
+        verts[i] *= _projmat;
+
+        verts[i].x += 1;
+        verts[i].y += 1;
+
+        verts[i].x *= 0.5 * _window->resw;
+        verts[i].y *= -0.5 * _window->resh;
+
+        verts[i].y += _window->resh;
+      }
+
+      // draw face
+      _window->set_draw_color(clr[0], clr[1], clr[2], 255);
+      _window->draw_triangle(
+        verts[0].x, verts[0].y,
+        verts[1].x, verts[1].y,
+        verts[2].x, verts[2].y
+      );
+    }
+
+    delete[] transfVerts;
+  }
+
   auto Renderer::_calc_view_matrix() -> matrix4x4 {
     matrix4x4 resmat, rotmat;
 
@@ -158,15 +163,26 @@ namespace engine::gfx {
     return resmat;
   }
 
-  auto Renderer::_sort_faces_by_distance(vector<face> *faces, math::vec3 verts[]) -> void {
-    sort(
-      faces->begin(),
-      faces->end(),
-      [=](face &f1, face &f2) {
-        float z1 = (verts[f1.verts[0]].z + verts[f1.verts[1]].z + verts[f1.verts[2]].z) / 3;
-        float z2 = (verts[f2.verts[0]].z + verts[f2.verts[2]].z + verts[f2.verts[2]].z) / 3;
-        return z1 > z2;
-      }
-    );
+  /*auto _find_plane_intersection_point(const vec3 &plane_p, const vec3 &plane_n, const vec3 &start, const vec3 &end) -> vec3 {
+    float plane_d = vec3::dot(plane_n, plane_p);
+    float start_d = vec3::dot(start, plane_n);
+    float end_d = vec3::dot(end, plane_n);
+    float t = (plane_d - start_d) / (end_d - start_d);
+    vec3 start_to_end = end - start;
+    vec3 inter_line = start_to_end * t;
+    return start + inter_line;
   }
+
+  auto _face_clip_against_plane(const vec3 &plane_p, const vec3 &plane_n, const vec3 in[3], vec3 out1[3], vec3 out2[3]) -> int {
+    auto dist = [&](vec3 &p) {
+      return vec3::dot(plane_p, p) - vec3::dot(plane_n, plane_p);
+    };
+
+    vec3* inside[3]; int insideCount = 0;
+    vec3* outside[3]; int outsideCount = 0;
+
+    float d0 = dist(in[0]);
+    float d1 = dist(in[1]);
+    float d2 = dist(in[2]);
+  }*/
 }

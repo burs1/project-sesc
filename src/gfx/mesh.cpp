@@ -18,15 +18,25 @@ namespace engine::gfx {
   auto mesh::_load_from_obj(const char *path) -> void {
     ifstream in(path);
 
-    if (!in.is_open())
-      throw runtime_error("File not found");
+    if (!in.is_open()) { throw runtime_error("File not found"); }
 
+    char line[128];
     char mode;
-    while (in >> mode)
-    {
-      if (mode == 'f') {
+    while (!in.eof()) {
+      in.getline(line, 128); 
+      strstream sstream;
+      sstream << line;
+
+      sstream >> mode;
+ 
+      if (mode == 'v') {
+        vec3 v;
+        sstream >> v.x >> v.y >> v.z;
+        verts.push_back(v);
+      }
+      else if (mode == 'f') {
         int vertsIds[3];
-        in >> vertsIds[0] >> vertsIds[1] >> vertsIds[2];
+        sstream >> vertsIds[0] >> vertsIds[1] >> vertsIds[2];
         
         faces.push_back(
           face{
@@ -35,11 +45,6 @@ namespace engine::gfx {
             vertsIds[2] - 1
           }
         );
-      }
-      else if(mode == 'v') {
-        vec3 v;
-        in >> v.x >> v.y >> v.z;
-        verts.push_back(v);
       }
     }
 

@@ -32,6 +32,8 @@ namespace engine {
 
     auto input_axis(SDL_Scancode, SDL_Scancode)     -> int;
 
+    auto get_mouse_pos(int&, int&)                  -> void;
+
     // ~ resources
     auto load_sprite(const char*, const char*) -> void;
 

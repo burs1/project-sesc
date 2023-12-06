@@ -29,18 +29,20 @@ namespace engine::gmpl {
       return entity;
     }
 
+    // ~ camera
+    auto set_camera_transform(const math::vec3&, const math::vec3&) -> void;
 
     // ~ input
-    auto input_check(SDL_Scancode) -> bool;
+    auto input_check(SDL_Scancode)                      -> bool;
 
-    auto input_axis(SDL_Scancode, SDL_Scancode) -> int;
+    auto input_axis(SDL_Scancode, SDL_Scancode)         -> int;
 
-
+    auto get_mouse_pos(int&, int&, bool centered=false) -> void;
+    
     // ~ entities
     auto find_entity_by_type(const char*, int) -> Entity*;
 
     auto find_entity_by_tag(const char*)       -> Entity*;
-
 
     // ~ draw
     auto set_draw_color(Uint8, Uint8, Uint8, Uint8) -> void;
@@ -60,21 +62,21 @@ namespace engine::gmpl {
     auto render_mesh(const char*, math::vec3, math::vec3) -> void;
 
 
-    // - Variables -----------------------
+    // ~ vars
     const float &deltaTime;
 
   private:
-    // - Internal methods ----------------
+    // ~ internal methods
     auto _initialize_entity(Entity*, const char*, const char*, const char*) -> void;
 
-
-    // - Variables -----------------------
+    // ~ vars
     Window *_window;
     gfx::Renderer *_renderer;
 
+    struct { math::vec3 pos, rot; } cam;
+
     std::map< const char*, Entity* >              _entitiesByTag;
     std::map< const char*, std::vector<Entity*> > _entitiesByType;
-
 
   };
 }

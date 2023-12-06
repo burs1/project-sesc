@@ -3,6 +3,7 @@
 
 using namespace std;
 using namespace engine::gfx;
+using namespace engine::math;
 
 namespace engine::gmpl {
   Scene::Scene(Window *p_window, Renderer *p_renderer, const float& p_deltaTime)
@@ -25,6 +26,11 @@ namespace engine::gmpl {
     // Draw all entities
     for (auto entity : _entitiesByType["all"]) { entity->on_draw(); }
   }
+
+  // ~ camera
+  auto Scene::set_camera_transform(const vec3 &pos, const vec3 &rot) -> void {
+    _renderer->set_camera_transform(pos, rot);
+  }
   
   // ~ input
   auto Scene::input_check(SDL_Scancode keycode) -> bool {
@@ -35,6 +41,13 @@ namespace engine::gmpl {
     return _window->input_axis(l, r);
   }
 
+  auto Scene::get_mouse_pos(int &x, int &y, bool centered) -> void {
+    _window->get_mouse_pos(x, y);
+
+    if (not centered) { return; }
+    x -= _window->w/2;
+    y -= _window->h/2;
+  }
   
   // ~ entities
   auto Scene::find_entity_by_type(const char *type, int n) -> Entity* {
@@ -86,7 +99,7 @@ namespace engine::gmpl {
     _window->draw_sprite_ex(spritename, x, y, xscale, yscale, angle, xcent, ycent);
   }
 
-  auto Scene::render_mesh(const char* meshname, math::vec3 pos, math::vec3 rot) -> void {
+  auto Scene::render_mesh(const char* meshname, vec3 pos, vec3 rot) -> void {
     _renderer->render_add_mesh(meshname, pos, rot);
   }
   

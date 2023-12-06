@@ -1,5 +1,6 @@
 #include "window.h"
 #include <SDL_hints.h>
+#include <SDL_mouse.h>
 #include <SDL_pixels.h>
 #include <SDL_render.h>
 
@@ -102,6 +103,10 @@ namespace engine {
 
   auto Window::input_axis(SDL_Scancode l, SDL_Scancode r) -> int {
     return _inputs[r] - _inputs[l];
+  }
+  
+  auto Window::get_mouse_pos(int &x, int &y) -> void {
+    SDL_GetMouseState(&x, &y);
   }
   
   // ~ window
