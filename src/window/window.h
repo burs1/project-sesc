@@ -42,6 +42,8 @@ namespace engine {
 
     auto draw_line(int, int, int, int)                                          -> void;
 
+    auto draw_triangle(int, int, int, int, int, int, bool fill=true)            -> void;
+
     auto set_font(const char*)                                                  -> void;
 
     auto draw_text(const char*, int, int, float, float)                         -> void;
@@ -63,6 +65,7 @@ namespace engine {
     // vars
     SDL_Window *_window;
     SDL_Renderer *_renderer;
+    SDL_Texture *_renderTexture;
 
     const Uint8 *_inputs;
 

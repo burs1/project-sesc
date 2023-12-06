@@ -24,18 +24,25 @@ namespace engine::gfx {
     auto load_mesh(const char*, const char*)            -> void;
 
     // ~ draw
-    auto set_camera_transform(math::vec3, math::vec3)   -> void;
+    auto set_camera_transform(const math::vec3&, const math::vec3&)   -> void;
 
-    auto render_add_mesh(const char*, math::vec3, math::vec3) -> void;
+    auto render_add_mesh(const char*, const math::vec3&, const math::vec3&) -> void;
 
     auto render() -> void;
 
   private:
+    // internal methods
+    // ~ render
+    auto _calc_view_matrix() -> math::matrix4x4;
+
+    auto _calc_transform_matrix(const math::vec3&, const math::vec3&) -> math::matrix4x4;
+
+    auto _sort_faces_by_distance(std::vector<face>*, math::vec3[]) -> void;
+
     struct rend_info {
       mesh *mesh;
       math::vec3 pos, rot;
     };
-
 
     // vars
     Window *_window;
@@ -45,6 +52,5 @@ namespace engine::gfx {
 
     std::vector< rend_info > _meshesToDraw;
     math::matrix4x4 _projmat;
-
   };
 }

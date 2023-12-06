@@ -1,10 +1,7 @@
 #include "window.h"
-
-#include <SDL_error.h>
-#include <SDL_stdinc.h>
-#include <iostream>
-#include <sdl_ttf.h>
-#include <stdexcept>
+#include <SDL_hints.h>
+#include <SDL_pixels.h>
+#include <SDL_render.h>
 
 using namespace std;
 using namespace engine::window;
@@ -106,8 +103,6 @@ namespace engine {
   auto Window::input_axis(SDL_Scancode l, SDL_Scancode r) -> int {
     return _inputs[r] - _inputs[l];
   }
-
-
   
   // ~ window
   auto Window::toggle_fullscreen() -> void {
@@ -152,6 +147,15 @@ namespace engine {
   
   auto Window::draw_line(int x1, int y1, int x2, int y2) -> void {
     SDL_RenderDrawLine(_renderer, x1, y1, x2, y2);
+  }
+
+  auto Window::draw_triangle(int x1, int y1, int x2, int y2, int x3, int y3, bool fill) -> void {
+    SDL_Vertex verts[] = {
+      {{(float)x1, (float)y1}, _drawColor},
+      {{(float)x2, (float)y2}, _drawColor},
+      {{(float)x3, (float)y3}, _drawColor}
+    };
+    SDL_RenderGeometry(_renderer, NULL, verts, 3, NULL, 0);
   }
     
   auto Window::set_font(const char* fontname) -> void {

@@ -6,18 +6,22 @@
 #include <stdexcept>
 
 namespace engine::gfx {
+  struct face {
+    int verts[3];
+    struct { int r = 255, g = 255, b = 255; } color;
+  };
+  
   class mesh {
   public:
     mesh(const char*);
 
     ~mesh();
 
-    struct face { int v1, v2, v3; };
-
     std::vector< face >           faces;
     std::vector< math::vec3 >     verts;
 
   private:
     auto _load_from_obj(const char*) -> void;
+
   };
 }

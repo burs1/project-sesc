@@ -1,5 +1,6 @@
 #include "renderer.h"
-#include <stdexcept>
+
+#include <iostream>
 
 using namespace std;
 using namespace engine::math;
@@ -35,67 +36,137 @@ namespace engine::gfx {
 
 
   // ~ draw
-  auto Renderer::set_camera_transform(vec3 pos, vec3 rot) -> void {
-    _cam.pos = pos; _cam.rot = rot;
+  auto Renderer::set_camera_transform(const vec3 &pos, const vec3 &rot) -> void {
+    _cam.pos = pos;
+    _cam.rot = rot;
   }
 
-  auto Renderer::render_add_mesh(const char* meshname, vec3 pos, vec3 rot) -> void {
+  auto Renderer::render_add_mesh(const char* meshname, const vec3 &pos, const vec3 &rot) -> void {
     _meshesToDraw.push_back( rend_info{_meshes[meshname], pos, rot} );
   }
 
   auto Renderer::render() -> void {
-    matrix4x4 viewmat, viewrotmat;
-    viewrotmat.set_rot(_cam.rot);
-    viewmat.look_at(_cam.pos, _cam.pos + vec3(0, 0, 1) * viewrotmat, _projmat.up());
+    matrix4x4 viewmat = _calc_view_matrix();
+    vector<face> facesToDraw;
 
-    for(auto [mesh, pos, rot] : _meshesToDraw) {
-      // Prepare matricies
-      matrix4x4 rotmat, transmat, worldmat;
+    // Render meshes
+    for(auto &[mesh, pos, rot] : _meshesToDraw) {
+      matrix4x4 transfmat = _calc_transform_matrix(pos, rot);
 
-      rotmat.set_rot(rot);
-      transmat.set_translation(pos);
+      // Transform verticies
+      vec3 *transformedVerts = new vec3[mesh->verts.size()];
+      for (int i = 0; i < mesh->verts.size(); ++i)
+        transformedVerts[i] = mesh->verts[i] * transfmat;
 
-      worldmat.set_identity();
-      worldmat *= rotmat;
-      worldmat *= transmat;
+      // Viewed verticies
+      vec3 *viewedVerts = new vec3[mesh->verts.size()];
+      for (int i = 0; i < mesh->verts.size(); ++i)
+        viewedVerts[i] = transformedVerts[i] * viewmat;
 
-      // Draw faces
-      for(auto [p1, p2, p3] : mesh->faces) {
-        vec3 curVerts[] = {mesh->verts[p1], mesh->verts[p2], mesh->verts[p3]};
+      // Projected verticies
+      vec3 *projectedVerts = new vec3[mesh->verts.size()];
+      for (int i = 0; i < mesh->verts.size(); ++i)
+        projectedVerts[i] = viewedVerts[i] * _projmat;
 
-        // Transform, view and project verticies
-        for(int i = 0; i < 3; ++i) {
-          curVerts[i] *= worldmat;
-          curVerts[i] *= viewmat;
-          curVerts[i] = curVerts[i] * _projmat;
-        }
+      // Filter faces
+      for(auto &face : mesh->faces) {
+        vec3 vverts[] = {
+          viewedVerts[face.verts[0]],
+          viewedVerts[face.verts[1]],
+          viewedVerts[face.verts[2]]
+        };
 
-        // Find normal
-        vec3 nrml;
-        nrml = vec3::cross(curVerts[2] - curVerts[0], curVerts[2] - curVerts[1]);
+        // Skip if normal look in other direction
+        vec3 nrml = vec3::cross(vverts[2] - vverts[0], vverts[2] - vverts[1]);
         nrml.normalize();
 
-        // Don't draw if normal look in other direction
-        if (vec3::dot(nrml, vec3::normalized(curVerts[0])) >= 0.0f) { continue; }
+        if (vec3::dot(nrml, vec3::normalized(vverts[0])) >= 0.0f) { continue; }
+
+        // Push face
+        facesToDraw.push_back(face);
+      }
+
+      _sort_faces_by_distance(&facesToDraw, viewedVerts);
+
+      // Draw faces on screen
+      for (auto &face : facesToDraw) {
+        vec3 tverts[] = {
+          transformedVerts[face.verts[0]],
+          transformedVerts[face.verts[1]],
+          transformedVerts[face.verts[2]]
+        };
+
+        vec3 verts[] = {
+          projectedVerts[face.verts[0]],
+          projectedVerts[face.verts[1]],
+          projectedVerts[face.verts[2]]
+        };
 
         // Scale to screen
         for(int i = 0; i < 3; ++i) {
-          curVerts[i].x += 1;
-          curVerts[i].y += 1;
+          verts[i].x += 1;
+          verts[i].y += 1;
 
-          curVerts[i].x *= 0.5 * _window->resw;
-          curVerts[i].y *= -0.5 * _window->resh;
+          verts[i].x *= 0.5 * _window->resw;
+          verts[i].y *= -0.5 * _window->resh;
+          verts[i].y += _window->resh;
         }
 
-        // Draw lines
-        for (int i = 0; i < 3; ++i)
-          _window->draw_line(
-            curVerts[i].x, _window->resh + curVerts[i].y,
-            curVerts[(i + 1)%3].x, _window->resh + curVerts[(i + 1)%3].y
-          );
-      }
-    }
+        // Calc light
+        vec3 nrml = vec3::cross(tverts[2] - tverts[0], tverts[2] - tverts[1]);
+        nrml.normalize();
 
+        vec3 sundir{1, 1, 1}; 
+        sundir.normalize();
+        float lightk = (1 + vec3::dot(nrml, sundir)) / 2;
+
+        _window->set_draw_color(255 * lightk, 255 * lightk, 255 * lightk, 255);
+
+        // Draw lines
+        _window->draw_triangle(
+          verts[0].x, verts[0].y,
+          verts[1].x, verts[1].y,
+          verts[2].x, verts[2].y
+        );
+      }
+      facesToDraw.clear();
+    }
     _meshesToDraw.clear();
+  }
+
+  // internal methods
+  // ~ render
+  auto Renderer::_calc_view_matrix() -> matrix4x4 {
+    matrix4x4 resmat, rotmat;
+
+    rotmat.set_rot(_cam.rot);
+    resmat.look_at(_cam.pos, _cam.pos + rotmat.forward(), _projmat.up());
+
+    return resmat;
+  }
+
+  auto Renderer::_calc_transform_matrix(const vec3 &pos, const vec3 &rot) -> matrix4x4 {
+    matrix4x4 rotmat, translmat, resmat;
+
+    rotmat.set_rot(rot);
+    translmat.set_translation(pos);
+
+    resmat.set_identity();
+    resmat *= rotmat;
+    resmat *= translmat;
+
+    return resmat;
+  }
+
+  auto Renderer::_sort_faces_by_distance(vector<face> *faces, math::vec3 verts[]) -> void {
+    sort(
+      faces->begin(),
+      faces->end(),
+      [=](face &f1, face &f2) {
+        float z1 = (verts[f1.verts[0]].z + verts[f1.verts[1]].z + verts[f1.verts[2]].z) / 3;
+        float z2 = (verts[f2.verts[0]].z + verts[f2.verts[2]].z + verts[f2.verts[2]].z) / 3;
+        return z1 > z2;
+      }
+    );
   }
 }

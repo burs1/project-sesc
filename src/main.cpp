@@ -35,6 +35,7 @@ private:
 
     // rotate
     pos += rotVel * deltaTime;
+    rot += rotVel * deltaTime;
   }
 
   void on_draw() override {
@@ -53,7 +54,7 @@ int main (int argc, char *argv[]) {
   vec3 campos, camrot;
 
   // Init systems
-  Window *window = new Window("starfighters", 320, 180, 1280, 720);
+  Window *window = new Window("starfighters", 320, 180, 1280, 720, false);
   Renderer *renderer = new Renderer(window);
   float deltaTime = 0.016;
 
