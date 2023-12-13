@@ -20,10 +20,13 @@ private:
     get_mouse_pos(mouseX, mouseY, true);
 
     float yawAxis = 0;
+    float xawAxis = 0;
     if (abs(mouseX) > 150) { yawAxis = (mouseX > 0 ? 1 : -1); }
+    if (abs(mouseY) > 150) { xawAxis = (mouseY > 0 ? 1 : -1); }
 
     // Rotate
     rot.y += yawAxis * get_delta_time();
+    rot.x += xawAxis * get_delta_time();
 
     matrix4x4 rotmat;
     rotmat.set_rot(rot);

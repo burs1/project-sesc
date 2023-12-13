@@ -107,7 +107,6 @@ namespace engine::gfx {
         return z1 > z2;
       }
     );
-
     // Draw faces
     for (auto [vertsInds, clr] : facesToDraw) {
       vec3 verts[] = {
@@ -118,6 +117,12 @@ namespace engine::gfx {
 
       // project verts
       for (int i = 0; i < 3; ++i) {
+        //int ClippedFaces = 0;
+        //face clipped[2];
+        //vec3 verts(vertss);
+        //ClippedFaces = _face_clip_against_plane(vec3(0.0f, 0.0f, 0.1f), vec3(0.0f, 0.0f, 1.0f), verts[i], clipped[0], clipped[1]);
+        //for (int j = 0; j < ClippedFaces; ++j) {
+        //verts[i] = clipped[j];
         verts[i] *= _projmat;
 
         verts[i].x += 1;
@@ -127,6 +132,7 @@ namespace engine::gfx {
         verts[i].y *= -0.5 * _window->resh;
 
         verts[i].y += _window->resh;
+        //}
       }
 
       // draw face
@@ -163,7 +169,7 @@ namespace engine::gfx {
     return resmat;
   }
 
-  /*auto _find_plane_intersection_point(const vec3 &plane_p, const vec3 &plane_n, const vec3 &start, const vec3 &end) -> vec3 {
+  auto _find_plane_intersection_point(const vec3 &plane_p, const vec3 &plane_n, const vec3 &start, const vec3 &end) -> vec3 {
     float plane_d = vec3::dot(plane_n, plane_p);
     float start_d = vec3::dot(start, plane_n);
     float end_d = vec3::dot(end, plane_n);
@@ -173,16 +179,58 @@ namespace engine::gfx {
     return start + inter_line;
   }
 
-  auto _face_clip_against_plane(const vec3 &plane_p, const vec3 &plane_n, const vec3 in[3], vec3 out1[3], vec3 out2[3]) -> int {
-    auto dist = [&](vec3 &p) {
-      return vec3::dot(plane_p, p) - vec3::dot(plane_n, plane_p);
-    };
-
-    vec3* inside[3]; int insideCount = 0;
-    vec3* outside[3]; int outsideCount = 0;
-
-    float d0 = dist(in[0]);
-    float d1 = dist(in[1]);
-    float d2 = dist(in[2]);
-  }*/
+auto _face_clip_against_plane(const vec3 &plane_p, const vec3 &plane_n, vec3 in[3], vec3 out1[3], vec3 out2[3]) -> int {
+   
+   vec3* inside[3]; int insideCount = 0;
+   vec3* outside[3]; int outsideCount = 0;
+ 
+   float d0 = vec3::dot(plane_p, in[0]) - vec3::dot(plane_n, plane_p);
+   float d1 = vec3::dot(plane_p, in[1]) - vec3::dot(plane_n, plane_p);
+   float d2 = vec3::dot(plane_p, in[2]) - vec3::dot(plane_n, plane_p);
+   
+   if (d0 >= 0) { inside[insideCount++] = &in[0]; }
+   else { outside[outsideCount++] = &in[0]; }
+   if (d1 >= 0) { inside[insideCount++] = &in[1]; }
+   else { outside[outsideCount++] = &in[1]; }
+   if (d2 >= 0) { inside[insideCount++] = &in[2]; }
+   else { outside[outsideCount++] = &in[2]; }
+ 
+   if (insideCount == 0)
+   {
+     return 0;
+   }
+ 
+   if (insideCount == 3)
+   {
+     out1[0] = in[0];
+     out1[1] = in[1];
+     out1[2] = in[2];
+ 
+     return 1;
+   }
+ 
+   if (insideCount == 1 && outsideCount == 2)
+   {
+     out1[0] = *inside[0];
+     out1[1] = _find_plane_intersection_point(plane_p, plane_n, *inside[0], *outside[0]);
+     out1[2] = _find_plane_intersection_point(plane_p, plane_n, *inside[0], *outside[1]);
+ 
+     return 1;
+   }
+ 
+   if (insideCount == 2 && outsideCount == 1)
+   {
+     out1[0] = *inside[0];
+     out1[1] = *inside[1];
+     out1[2] = _find_plane_intersection_point(plane_p, plane_n, *inside[0], *outside[0]);
+ 
+     out2[0] = *inside[1];
+     out2[1] = out1[2];
+     out2[2] = _find_plane_intersection_point(plane_p, plane_n, *inside[1], *outside[0]);
+ 
+     return 2;
+   }
+ 
+   return 0;
+}
 }
