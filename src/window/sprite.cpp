@@ -1,14 +1,19 @@
-#include "sprite.h"
+#include "window/sprite.h"
 
-namespace engine::window {
-  Sprite::Sprite(SDL_Texture* texture)
-  : texture(m_texture), x(m_rect.x), y(m_rect.y), w(m_rect.w), h(m_rect.h), rect(m_rect) {
-    m_texture = texture;
+namespace eng::sdl {
+  
+Sprite::Sprite(SDL_Texture* texture)
+: texture(texture_), x(rect_.x), y(rect_.y),
+  w(rect_.w), h(rect_.h), rect(rect_) {
+  texture_ = texture;
 
-    SDL_QueryTexture(m_texture, NULL, NULL, &m_rect.w, &m_rect.h);
-  }
+  SDL_QueryTexture(texture_, NULL, NULL, &rect_.w, &rect_.h);
+}
 
-  Sprite::~Sprite() {
-    SDL_DestroyTexture(m_texture);
-  }
+
+Sprite::~Sprite() {
+  SDL_DestroyTexture(texture_);
+}
+
+  
 }

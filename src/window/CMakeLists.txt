@@ -1,18 +1,24 @@
-# - vars
-set(SOURCE_FILES window.cpp sprite.cpp)
+# vars
+set(SOURCE_FILES window.cpp sprite.cpp audio.cpp drawer.cpp input.cpp)
+set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 
-# - find packages
+# find packages
 find_package(SDL2 REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(SDL2_image REQUIRED)
+find_package(SDL2_mixer REQUIRED)
 
-# - add lib
+# add lib
 add_library(Window ${SOURCE_FILES})
 
-# - link libs
+# include dirs
+target_include_directories(Window PUBLIC ${INCLUDE_DIRS})
+
+# link libs
 target_link_libraries(
   Window
   PUBLIC SDL2::SDL2
   PUBLIC SDL2_ttf::SDL2_ttf
   PUBLIC SDL2_image::SDL2_image
+  PUBLIC SDL2_mixer::SDL2_mixer
 )

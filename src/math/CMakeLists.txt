@@ -1,9 +1,12 @@
-# vars
-set(SOURCE_FILES matrix4x4.cpp vec2.cpp vec3.cpp)
-set(INCLUDE_DIRS .)
+# ~ add target
+add_library(
+  AdvMath
+  vec3.cpp
+  matrix4x4.cpp
+  )
 
-# add lib
-add_library(EngineMath ${SOURCE_FILES})
-
-# include dirs 
-target_include_directories(EngineMath PUBLIC ${INCLUDE_DIRS})
+# ~ include directories
+include_directories(
+  AdvMath
+  PUBLIC ${CMAKE_SOURCE_DIR}/include
+  )

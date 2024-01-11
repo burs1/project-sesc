@@ -1,23 +1,23 @@
-# - vars
+# vars
 set(INCLUDE_DIRS window)
 
-# - add subdirs
+# add subdirs
 add_subdirectory(gfx)
 add_subdirectory(gmpl)
 add_subdirectory(math)
 add_subdirectory(window)
 
-# - add lib
+# add lib
 add_library(Engine null.cpp)
 
-# - include dirs
+# include dirs
 target_include_directories(Engine PUBLIC ${INCLUDE_DIRS})
 
-# - link libs
+# link libs
 target_link_libraries(
   Engine
-  PUBLIC Gfx
+  PUBLIC GFX
   PUBLIC Window
   PUBLIC Gameplay
-  PUBLIC EngineMath
+  PUBLIC AdvMath
 )

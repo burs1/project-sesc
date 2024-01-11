@@ -1,16 +1,16 @@
 # vars
-set(SOURCE_FILES renderer.cpp mesh.cpp)
-set(INCLUDE_DIRS . ../)
+set(SOURCE_FILES renderer3d.cpp mesh.cpp)
+set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 
 # add lib
-add_library(Gfx ${SOURCE_FILES})
+add_library(GFX ${SOURCE_FILES})
 
 # include dirs
-target_include_directories(Gfx PUBLIC ${INCLUDE_DIRS})
+target_include_directories(GFX PUBLIC ${INCLUDE_DIRS})
 
 # link libs
 target_link_libraries(
-  Gfx
-  PUBLIC EngineMath
+  GFX
+  PUBLIC AdvMath
   PUBLIC Window
 )

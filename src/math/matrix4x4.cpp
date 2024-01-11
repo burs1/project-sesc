@@ -1,33 +1,26 @@
-/*
- * Author: Ilya Buravov
- *
- * Summary: Simple 4x4 matrix implementation
- *
- */
+#include "math/matrix4x4.h"
 
-#include "matrix4x4.h"
+namespace eng::math {
+  Matrix4x4::Matrix4x4() { SetIdentity(); }
 
-namespace engine::math {
-  matrix4x4::matrix4x4() { set_identity(); }
-
-  matrix4x4::matrix4x4(const matrix4x4& other) { _copy(other); }
+  Matrix4x4::Matrix4x4(const Matrix4x4& other) { _copy(other); }
 
   // methods
-  auto matrix4x4::set_identity() -> void {
-    // fill matrix 
+  auto Matrix4x4::SetIdentity() -> void {
+    // fill Matrix 
     for (int i = 0; i < 4; ++i) {
       for (int j = 0; j < 4; ++j)
         m[i][j] = i == j;
     }
 
-    // final matrix:
+    // final Matrix:
     // [1, 0, 0, 0]
     // [0, 1, 0, 0]
     // [0, 0, 1, 0]
     // [0, 0, 0, 1]
   }
 
-  auto matrix4x4::set_translation(const vec3& v) -> void {
+  auto Matrix4x4::SetTranslation(const Vec3& v) -> void {
     m[0][0] = 1.0f;
     m[1][1] = 1.0f;
     m[2][2] = 1.0f;
@@ -37,41 +30,20 @@ namespace engine::math {
     m[3][2] = v.z;
   }
 
-  auto matrix4x4::get_translation() const -> vec3 {
-    return vec3(m[3][0], m[3][1], m[3][2]);
-  }
 
-  auto matrix4x4::right() const -> vec3 {
-    return vec3(m[0][0], m[0][1], m[0][2]);
-  }
+  auto Matrix4x4::SetRotation(const Vec3& v) -> void {
+    Matrix4x4 xrot, yrot, zrot;
 
-  auto matrix4x4::up() const -> vec3 {
-    return vec3(m[1][0], m[1][1], m[1][2]);
-  }
-
-  auto matrix4x4::forward() const -> vec3 {
-    return vec3(m[2][0], m[2][1], m[2][2]);
-  }
-
-  auto matrix4x4::set_scale(const vec3& v) -> void {
-    m[0][0] = v.x;
-    m[1][1] = v.y;
-    m[2][2] = v.z;
-  }
-
-  auto matrix4x4::set_rot(const vec3& v) -> void {
-    matrix4x4 xrot, yrot, zrot;
-
-    xrot.set_rotX(v.x);
-    yrot.set_rotY(v.y);
-    zrot.set_rotZ(v.z);
+    xrot.SetRotationX(v.x);
+    yrot.SetRotationY(v.y);
+    zrot.SetRotationZ(v.z);
 
     operator*=(xrot);
     operator*=(yrot);
     operator*=(zrot);
   }
 
-  auto matrix4x4::set_rotX(float rot) -> void {
+  auto Matrix4x4::SetRotationX(float rot) -> void {
     m[0][0] = 1.0f;
     m[1][1] = cosf(rot);
     m[1][2] = sinf(rot);
@@ -80,7 +52,7 @@ namespace engine::math {
     m[3][3] = 1.0f;
   }
  
-  auto matrix4x4::set_rotY(float rot) -> void {
+  auto Matrix4x4::SetRotationY(float rot) -> void {
     m[0][0] = cosf(rot);
     m[0][2] = -sinf(rot);
     m[2][0] = sinf(rot);
@@ -89,7 +61,7 @@ namespace engine::math {
     m[3][3] = 1.0f;
   }
 
-  auto matrix4x4::set_rotZ(float rot) -> void {
+  auto Matrix4x4::SetRotationZ(float rot) -> void {
     m[0][0] = cosf(rot);
     m[0][1] = sinf(rot);
     m[1][0] = -sinf(rot);
@@ -98,7 +70,26 @@ namespace engine::math {
     m[3][3] = 1.0f;
   }
 
-  auto matrix4x4::set_perspective(float fov, float aspratio, float near, float far) -> void {
+  auto Matrix4x4::Right() const -> Vec3 {
+    return Vec3(m[0][0], m[0][1], m[0][2]);
+  }
+
+  auto Matrix4x4::Up() const -> Vec3 {
+    return Vec3(m[1][0], m[1][1], m[1][2]);
+  }
+
+  auto Matrix4x4::Forward() const -> Vec3 {
+    return Vec3(m[2][0], m[2][1], m[2][2]);
+  }
+
+  auto Matrix4x4::SetScale(const Vec3& v) -> void {
+    m[0][0] = v.x;
+    m[1][1] = v.y;
+    m[2][2] = v.z;
+  }
+
+
+  auto Matrix4x4::SetPerspective(float fov, float aspratio, float near, float far) -> void {
     float fovrad = 1.0f / tanf( (fov / 2) * (3.14159f / 180) );
 		m[0][0] = aspratio * fovrad;
 		m[1][1] = fovrad;
@@ -108,14 +99,14 @@ namespace engine::math {
 		m[3][3] = 0.0f;
 	}
   
-  auto matrix4x4::point_at(const vec3 &from, const vec3 &to, const vec3 &up) -> void {
-    vec3 newforward = to - from;
-    newforward.normalize();
+  auto Matrix4x4::PointAt(const Vec3 &from, const Vec3 &to, const Vec3 &up) -> void {
+    Vec3 newforward = to - from;
+    newforward.Normalize();
 
-    vec3 newup = up - newforward * vec3::dot(up, newforward);
-    newup.normalize();
+    Vec3 newup = up - newforward * Vec3::Dot(up, newforward);
+    newup.Normalize();
 
-    vec3 newright = vec3::cross(newup, newforward);
+    Vec3 newright = Vec3::Cross(newup, newforward);
 
     m[0][0] = newright.x;   m[0][1] = newright.y;   m[0][2] = newright.z;   m[0][3] = 0.0f;
     m[1][0] = newup.x;      m[1][1] = newup.y;      m[1][2] = newup.z;      m[1][3] = 0.0f;
@@ -123,13 +114,13 @@ namespace engine::math {
     m[3][0] = from.x;       m[3][1] = from.y;       m[3][2] = from.z;       m[3][3] = 1.0f;
   }
 
-  auto matrix4x4::look_at(const vec3 &from, const vec3 &to, const vec3 &up) -> void {
-    point_at(from, to, up);
-    inverse();
+  auto Matrix4x4::LookAt(const Vec3 &from, const Vec3 &to, const Vec3 &up) -> void {
+    PointAt(from, to, up);
+    Inverse();
   }
 
-  auto matrix4x4::inverse() -> void {
-    matrix4x4 res;
+  auto Matrix4x4::Inverse() -> void {
+    Matrix4x4 res;
 		res.m[0][0] = m[0][0]; res.m[0][1] = m[1][0]; res.m[0][2] = m[2][0]; res.m[0][3] = 0.0f;
 		res.m[1][0] = m[0][1]; res.m[1][1] = m[1][1]; res.m[1][2] = m[2][1]; res.m[1][3] = 0.0f;
 		res.m[2][0] = m[0][2]; res.m[2][1] = m[1][2]; res.m[2][2] = m[2][2]; res.m[2][3] = 0.0f;
@@ -145,12 +136,12 @@ namespace engine::math {
 
 
   // operators
-	auto matrix4x4::operator*=(const matrix4x4& other) -> void {
+	auto Matrix4x4::operator*=(const Matrix4x4& other) -> void {
 	  _copy( operator*(other) );
 	}
   
-  auto matrix4x4::operator*(const matrix4x4& other) const -> matrix4x4 {
-    matrix4x4 res;
+  auto Matrix4x4::operator*(const Matrix4x4& other) const -> Matrix4x4 {
+    Matrix4x4 res;
 
     for (int c = 0; c < 4; c++) {
 			for (int r = 0; r < 4; r++) {
@@ -164,15 +155,14 @@ namespace engine::math {
 		return res;
   }
 
-	auto matrix4x4::operator=(const matrix4x4& other) -> void {
+	auto Matrix4x4::operator=(const Matrix4x4& other) -> void {
 	  _copy(other);
 	}
 
   // internal methods
-  auto matrix4x4::_copy(const matrix4x4& other) -> void {
+  auto Matrix4x4::_copy(const Matrix4x4& other) -> void {
 	  for (int i = 0; i < 4; ++i) {
 	    for (int j = 0; j < 4; ++j) { m[i][j] = other.m[i][j]; }
 	  }
 	}
-
 }

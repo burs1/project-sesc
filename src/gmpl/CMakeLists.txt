@@ -1,6 +1,6 @@
 # vars
 set(SOURCE_FILES entity.cpp scene.cpp)
-set(INCLUDE_DIRS . ../gfx ../math ../window)
+set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 
 # add lib 
 add_library(Gameplay ${SOURCE_FILES})
@@ -11,7 +11,7 @@ target_include_directories(Gameplay PUBLIC ${INCLUDE_DIRS})
 # link libs
 target_link_libraries(
   Gameplay
-  PUBLIC Gfx
+  PUBLIC GFX
   PUBLIC Window
-  PUBLIC EngineMath
+  PUBLIC AdvMath
 )

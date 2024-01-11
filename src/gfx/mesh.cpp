@@ -1,53 +1,99 @@
-#include "mesh.h"
+#include "gfx/mesh.h"
 
 #include <iostream>
 
-using namespace std;
-using namespace engine::math; 
-
-namespace engine::gfx {
-  mesh::mesh(const char *path) {
-    _load_from_obj(path);
+namespace eng::gfx {
+  Mesh::Mesh(const char *file) {
+    LoadFromOBJ(file);
   }
 
-  mesh::~mesh() {
-    faces.clear();
-    verts.clear();
+
+  Mesh::~Mesh() {
+    delete[] verts;
+    delete[] triangles;
   }
 
-  auto mesh::_load_from_obj(const char *path) -> void {
-    ifstream in(path);
 
-    if (!in.is_open()) { throw runtime_error("File not found"); }
+  auto Mesh::LoadFromOBJ(const char *file) -> void {
+    std::ifstream in(file);
 
+    // Check if file was successfully loaded
+    if (!in.is_open()) {
+      throw std::runtime_error("File \"" + std::string(file) + "\"not found");
+    }
+
+    // Read file content
+    std::vector<math::Vec3> new_verts;
+    std::vector<Triangle> new_triangles;
+
+    ReadOBJ(in, new_verts, new_triangles);
+    in.close();
+
+    CopyDataFromVectors(new_verts, new_triangles);
+   
+    // Vectors free
+  }
+
+
+  auto Mesh::ReadOBJ(
+      std::ifstream& in,
+      std::vector<math::Vec3>& new_verts,
+      std::vector<Triangle>& new_triangles) -> void {
     char line[128];
-    char mode;
+    char junk;
+
     while (!in.eof()) {
+      // Read line
       in.getline(line, 128); 
-      strstream sstream;
+      std::strstream sstream;
       sstream << line;
 
-      sstream >> mode;
- 
-      if (mode == 'v') {
-        vec3 v;
-        sstream >> v.x >> v.y >> v.z;
-        verts.push_back(v);
+      // Parse data
+      if (line[0] == 'v') { // Vertex
+        math::Vec3 v;
+        sstream >> junk >> v.x >> v.y >> v.z;
+
+        new_verts.push_back(v);
       }
-      else if (mode == 'f') {
+      else if (line[0] == 'f') { // Triangle
         int vertsIds[3];
-        sstream >> vertsIds[0] >> vertsIds[1] >> vertsIds[2];
+        sstream >> junk >> vertsIds[0] >> vertsIds[1] >> vertsIds[2];
         
-        faces.push_back(
-          face{
-            vertsIds[0] - 1, 
-            vertsIds[1] - 1, 
-            vertsIds[2] - 1
+        new_triangles.push_back(
+          Triangle{
+            {
+              vertsIds[0] - 1,
+              vertsIds[1] - 1,
+              vertsIds[2] - 1
+            },
+            {
+              255,
+              255,
+              255
+            }
           }
         );
       }
     }
+  }
 
-    in.close();
+
+  auto Mesh::CopyDataFromVectors(
+      std::vector<math::Vec3>& new_verts,
+      std::vector<Triangle>& new_triangles) -> void {
+    // Copy verts data
+    verts_count = new_verts.size();
+    verts = new math::Vec3[verts_count];
+    for (int i=0; i<verts_count; ++i) {
+      verts[i] = new_verts[i];
+    }
+
+    // Copy triangles data
+    triangles_count = new_triangles.size();
+    triangles = new Triangle[triangles_count];
+    for (int i=0; i<triangles_count; ++i) {
+      triangles[i] = new_triangles[i];
+    }
+ 
   }
 }
