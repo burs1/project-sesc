@@ -54,8 +54,9 @@ auto Renderer3D::SetCameraTransform(const math::Vec3 &pos,
 auto Renderer3D::AddMeshToRenderHeap(
     const char* meshname,
     const math::Vec3 &pos,
-    const math::Vec3 &rot) -> void {
-  render_heap_.push_back( RenderData{meshes_[meshname], pos, rot} );
+    const math::Vec3 &rot,
+    const math::Vec3 &scale) -> void {
+  render_heap_.push_back( RenderData{meshes_[meshname], pos, rot, scale} );
 }
 
 auto Renderer3D::RenderHeap() -> void {
@@ -63,8 +64,8 @@ auto Renderer3D::RenderHeap() -> void {
   std::vector<RawTriangle> triangles_to_draw;
 
   // Filter triangles
-  for(auto [mesh, pos, rot] : render_heap_) {
-    FilterMeshTriangles(mesh, pos, rot, triangles_to_draw);
+  for(auto render_data : render_heap_) {
+    FilterMeshTriangles(render_data, triangles_to_draw);
   }
 
   // Sort triangles
@@ -107,16 +108,15 @@ auto Renderer3D::CalcTransformMatrix(
 
 
 auto Renderer3D::FilterMeshTriangles(
-    const Mesh *mesh,
-    const math::Vec3 &pos,
-    const math::Vec3 &rot,
+    const RenderData& render_data,
     std::vector<RawTriangle>& triangles_to_draw) -> void {
+  auto [mesh, pos, rot, scale] = render_data;
   // Transform all verts
   math::Matrix4x4 transfmat = CalcTransformMatrix(pos, rot);
 
   math::Vec3* transformed_verts = new math::Vec3[mesh->verts_count];
   for (int i=0; i < mesh->verts_count; ++i) {
-    transformed_verts[i] = mesh->verts[i] * transfmat;
+    transformed_verts[i] = mesh->verts[i] * scale * transfmat;
   }
 
   // Transform all verts to view basis
@@ -137,7 +137,8 @@ auto Renderer3D::FilterMeshTriangles(
     math::Vec3 normal = math::Vec3::Cross(
         viewed_verts[ verts_id[1] ] - viewed_verts[ verts_id[0] ],
         viewed_verts[ verts_id[2] ] - viewed_verts[ verts_id[0] ]);
-    if (math::Vec3::Dot(normal, viewmat_.Forward()) > 0.0f) { continue; }
+
+    if (math::Vec3::Dot(normal, viewed_verts[ verts_id[0] ]) > 0.0f) { continue; }
 
     // Calc light
     normal = math::Vec3::Cross(
@@ -145,7 +146,7 @@ auto Renderer3D::FilterMeshTriangles(
         transformed_verts[ verts_id[2] ] - transformed_verts[ verts_id[0] ]);
     normal.Normalize();
     float lightk = (1 + math::Vec3::Dot(normal, sun_direction_)) / 2;
-  
+
     triangles_to_draw.push_back(
       RawTriangle{
         {

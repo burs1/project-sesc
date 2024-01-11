@@ -92,6 +92,17 @@ namespace eng::math {
     z *= value;
   }
 
+  auto Vec3::operator*=(const Vec3& other) -> void {
+    x *= other.x;
+    y *= other.y;
+    z *= other.z;
+  }
+
+  auto Vec3::operator*(const Vec3& other) const -> Vec3 {
+    return Vec3(x * other.x, y * other.y, z * other.z);
+  }
+
+
   auto Vec3::operator/(const float &value) const -> Vec3 {
     return Vec3(x / value, y / value, z / value);
   }

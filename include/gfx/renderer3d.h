@@ -32,11 +32,16 @@ namespace eng::gfx {
     auto SetCameraTransform(const math::Vec3&, const math::Vec3&) -> void;
 
     auto AddMeshToRenderHeap(const char*, const math::Vec3&,
-                             const math::Vec3&) -> void;
+                             const math::Vec3&, const math::Vec3&) -> void;
 
     auto RenderHeap() -> void;
 
   private:
+    struct RenderData {
+      Mesh *mesh;
+      math::Vec3 pos, rot, scale;
+    };
+
     // Internal methods
     // ~ Render
     auto CalcViewMatrix() -> void;
@@ -46,9 +51,7 @@ namespace eng::gfx {
       const math::Vec3&) -> math::Matrix4x4;
     
     auto FilterMeshTriangles(
-      const Mesh*,
-      const math::Vec3&,
-      const math::Vec3&,
+      const RenderData&,
       std::vector<RawTriangle>&) -> void;
 
     auto DrawTriangles(std::vector<RawTriangle>&) -> void;
@@ -64,11 +67,6 @@ namespace eng::gfx {
       const math::Vec3&,
       const math::Vec3[3],
       math::Vec3[3], math::Vec3[3]) -> int;
-
-    struct RenderData {
-      Mesh *mesh;
-      math::Vec3 pos, rot;
-    };
 
     // vars
     sdl::Window *context_window_;

@@ -14,17 +14,18 @@ class Player : public gmpl::Entity {
 private:
   void OnUpdate() override {
     // Input
-    float thrustAxis = (IsKeyDown(SDL_SCANCODE_W) - IsKeyDown(SDL_SCANCODE_S)) * GetDeltaTime();
-    int dx, dy;
-    GetMouseDelta(&dx, &dy);
+    float forw_axis = (IsKeyDown(SDL_SCANCODE_W) - IsKeyDown(SDL_SCANCODE_S)) * GetDeltaTime();
+    float right_axis = (IsKeyDown(SDL_SCANCODE_D) - IsKeyDown(SDL_SCANCODE_A)) * GetDeltaTime() * 5.0f;
+
+    float rot_y = (IsKeyDown(SDL_SCANCODE_E) - IsKeyDown(SDL_SCANCODE_Q)) * GetDeltaTime() * 5.0f;
 
     // Rotate
-    rot.y += dx * 0.001f;
-    rot.x += dy * 0.001f;
+    rot.y += rot_y;
 
     math::Matrix4x4 rotmat;
     rotmat.SetRotation(rot);
-    pos += rotmat.Forward() * thrustAxis * 100.0f;
+    pos += rotmat.Forward() * forw_axis * 10.0f;
+    pos += rotmat.Right() * right_axis * 5.0f;
 
     SetCameraTransform(pos, rot);
   }
@@ -43,7 +44,6 @@ int main (int argc, char *argv[]) {
   // Init systems
   sdl::Window *window = new sdl::Window("starfighters", 1280, 720, false);
   window->drawer->SetRenderLogicalSize(320, 180);
-  window->input->SetCursorLock(true);
 
   gfx::Renderer3D *renderer3d = new gfx::Renderer3D(window);
 
@@ -57,6 +57,11 @@ int main (int argc, char *argv[]) {
   auto planet = scene->InstantiateEntity<Planet>("planet");
   planet->pos = math::Vec3(0, 0, 100);
   planet->rot = math::Vec3(0.2, 0.2, 0);
+
+  planet = scene->InstantiateEntity<Planet>("planet");
+  planet->pos = math::Vec3(0, 0, 400);
+  planet->rot = math::Vec3(0.2, 0.5, 0);
+  planet->scale = math::Vec3(5.0f, 1.0f, 5.0f);
 
   scene->InstantiateEntity<Player>();
 

@@ -16,6 +16,7 @@ friend class Scene;
 public:
   // Vars
   math::Vec3 pos, rot;
+  math::Vec3 scale = math::Vec3(1.0f, 1.0f, 1.0f);
   const char* meshname = "";
 
 protected:
@@ -142,13 +143,13 @@ protected:
                                           angle, h_align, v_align);
   }
 
-  inline auto DrawMesh(const char* name, math::Vec3 pos, math::Vec3 rot) -> void {
-    renderer3d_->AddMeshToRenderHeap(name, pos, rot);
+  inline auto DrawMesh(const char* name, math::Vec3 pos, math::Vec3 rot, math::Vec3 scale) -> void {
+    renderer3d_->AddMeshToRenderHeap(name, pos, rot, scale);
   }
 
   inline auto DrawSelf() -> void {
     if (meshname[0] != '\0') {
-      DrawMesh(meshname, pos, rot);
+      DrawMesh(meshname, pos, rot, scale);
     }
   }
 

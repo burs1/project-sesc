@@ -53,6 +53,10 @@ namespace eng::math {
     
     auto operator*(const Matrix4x4&)    -> Vec3;
 
+    auto operator*=(const Vec3&)        -> void;
+
+    auto operator*(const Vec3&)   const -> Vec3;
+
     auto operator==(const Vec3&)  const -> bool;
 
     auto operator!=(const Vec3&)  const -> bool;
