@@ -56,17 +56,17 @@ namespace eng::gfx {
 
     auto DrawTriangles(std::vector<RawTriangle>&) -> void;
 
+    auto TriangleClipAgainstPlane(
+      math::Vec3,
+      math::Vec3,
+      math::Vec3[3],
+      math::Vec3[3], math::Vec3[3]) -> int;
+
     auto FindPlaneIntersectionPoint(
-      const math::Vec3&,
-      const math::Vec3&,
+      math::Vec3,
+      math::Vec3,
       const math::Vec3&,
       const math::Vec3&) -> math::Vec3;
-    
-    auto FaceClipAgainstPlane(
-      const math::Vec3&,
-      const math::Vec3&,
-      const math::Vec3[3],
-      math::Vec3[3], math::Vec3[3]) -> int;
 
     // vars
     sdl::Window *context_window_;

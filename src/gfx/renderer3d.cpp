@@ -171,106 +171,130 @@ auto Renderer3D::DrawTriangles(
     std::vector<RawTriangle>& triangles_to_draw) -> void {
   for (auto [verts, clr] : triangles_to_draw) {
     // project verts
-    for (int i = 0; i < 3; ++i) {
-      //int ClippedFaces = 0;
-      //face clipped[2];
-      //vec3 verts(vertss);
-      //ClippedFaces = _face_clip_against_plane(vec3(0.0f, 0.0f, 0.1f), vec3(0.0f, 0.0f, 1.0f), verts[i], clipped[0], clipped[1]);
-      //for (int j = 0; j < ClippedFaces; ++j) {
-      //verts[i] = clipped[j];
-      verts[i] *= projmat_;
+    int clipped_triangles_count = 0;
+    math::Vec3 clipped_verts[2][3];
+    clipped_triangles_count = TriangleClipAgainstPlane(
+      math::Vec3(0.0f, 0.0f, 0.1f),
+      math::Vec3(0.0f, 0.0f, 1.0f),
+      verts,
+      clipped_verts[0], clipped_verts[1]);
+ 
+    for (int i=0; i < clipped_triangles_count; ++i) {
+      // Project verts
+      for (int j=0; j < 3; ++j) {
+        clipped_verts[i][j] *= projmat_;
 
-      verts[i].x += 1;
-      verts[i].y += 1;
+        clipped_verts[i][j].x += 1;
+        clipped_verts[i][j].y += 1;
 
-      verts[i].x *= 0.5 * context_window_->drawer->resw;
-      verts[i].y *= -0.5 * context_window_->drawer->resh;
+        clipped_verts[i][j].x *= 0.5 * context_window_->drawer->resw;
+        clipped_verts[i][j].y *= -0.5 * context_window_->drawer->resh;
 
-      verts[i].y += context_window_->drawer->resh;
-      //}
+        clipped_verts[i][j].y += context_window_->drawer->resh;
+      }
+
+      // draw face
+      context_window_->drawer->SetDrawColor(clr[0], clr[1], clr[2]);
+      context_window_->drawer->DrawTriangle(
+        clipped_verts[i][0].x, clipped_verts[i][0].y,
+        clipped_verts[i][1].x, clipped_verts[i][1].y,
+        clipped_verts[i][2].x, clipped_verts[i][2].y
+      );
     }
-
-    // draw face
-    context_window_->drawer->SetDrawColor(clr[0], clr[1], clr[2]);
-    context_window_->drawer->DrawTriangle(
-      verts[0].x, verts[0].y,
-      verts[1].x, verts[1].y,
-      verts[2].x, verts[2].y
-    );
   }
 }
 
 
-auto FindPlaneIntersectionPoint(
-    const math::Vec3 &plane_p,
-    const math::Vec3 &plane_n,
+auto Renderer3D::FindPlaneIntersectionPoint(
+    math::Vec3 plane_p,
+    math::Vec3 plane_n,
     const math::Vec3 &start,
     const math::Vec3 &end) -> math::Vec3 {
-  float plane_d = math::Vec3::Dot(plane_n, plane_p);
+  plane_n.Normalize();
+  float plane_d = -math::Vec3::Dot(plane_n, plane_p);
   float start_d = math::Vec3::Dot(start, plane_n);
   float end_d = math::Vec3::Dot(end, plane_n);
-  float t = (plane_d - start_d) / (end_d - start_d);
+  float t = (-plane_d - start_d) / (end_d - start_d);
   math::Vec3 start_to_end = end - start;
   math::Vec3 inter_line = start_to_end * t;
   return start + inter_line;
 }
 
-auto FaceClipAgainstPlane(
-    const math::Vec3 &plane_p,
-    const math::Vec3 &plane_n,
+auto Renderer3D::TriangleClipAgainstPlane(
+    math::Vec3 plane_p,
+    math::Vec3 plane_n,
     math::Vec3 in[3],
     math::Vec3 out1[3],
     math::Vec3 out2[3]) -> int {
-   math::Vec3* inside[3]; int insideCount = 0;
-   math::Vec3* outside[3]; int outsideCount = 0;
- 
-   float d0 = math::Vec3::Dot(plane_p, in[0]) - math::Vec3::Dot(plane_n, plane_p);
-   float d1 = math::Vec3::Dot(plane_p, in[1]) - math::Vec3::Dot(plane_n, plane_p);
-   float d2 = math::Vec3::Dot(plane_p, in[2]) - math::Vec3::Dot(plane_n, plane_p);
+  plane_n.Normalize();
+
+  auto dist = [&](math::Vec3 &p) {
+    math::Vec3 n = math::Vec3::Normalized(p);
+    return math::Vec3::Dot(plane_n, p) - math::Vec3::Dot(plane_n, plane_p);
+  };
+
+  math::Vec3 inside[3];
+  int insideCount = 0;
    
-   if (d0 >= 0) { inside[insideCount++] = &in[0]; }
-   else { outside[outsideCount++] = &in[0]; }
-   if (d1 >= 0) { inside[insideCount++] = &in[1]; }
-   else { outside[outsideCount++] = &in[1]; }
-   if (d2 >= 0) { inside[insideCount++] = &in[2]; }
-   else { outside[outsideCount++] = &in[2]; }
+  math::Vec3 outside[3];
+  int outsideCount = 0;
  
-   if (insideCount == 0)
-   {
+  float d0 = dist(in[0]);
+  float d1 = dist(in[1]);
+  float d2 = dist(in[2]);
+   
+   if (d0 >= 0) {
+     inside[insideCount++] = in[0];
+   }
+   else {
+     outside[outsideCount++] = in[0];
+   }
+
+   if (d1 >= 0) {
+     inside[insideCount++] = in[1];
+   }
+   else {
+     outside[outsideCount++] = in[1];
+   }
+
+   if (d2 >= 0) {
+     inside[insideCount++] = in[2];
+   }
+   else {
+     outside[outsideCount++] = in[2];
+   }
+ 
+   if (insideCount == 0) {
      return 0;
    }
  
-   if (insideCount == 3)
-   {
+   if (insideCount == 3) {
      out1[0] = in[0];
      out1[1] = in[1];
      out1[2] = in[2];
- 
      return 1;
    }
  
-   if (insideCount == 1 && outsideCount == 2)
-   {
-     out1[0] = *inside[0];
-     out1[1] = FindPlaneIntersectionPoint(plane_p, plane_n, *inside[0], *outside[0]);
-     out1[2] = FindPlaneIntersectionPoint(plane_p, plane_n, *inside[0], *outside[1]);
- 
+   if (insideCount == 1 && outsideCount == 2) {
+     out1[0] = inside[0];
+     out1[1] = FindPlaneIntersectionPoint(plane_p, plane_n, inside[0], outside[0]);
+     out1[2] = FindPlaneIntersectionPoint(plane_p, plane_n, inside[0], outside[1]);
      return 1;
    }
  
-   if (insideCount == 2 && outsideCount == 1)
-   {
-     out1[0] = *inside[0];
-     out1[1] = *inside[1];
-     out1[2] = FindPlaneIntersectionPoint(plane_p, plane_n, *inside[0], *outside[0]);
+   if (insideCount == 2 && outsideCount == 1) {
+     out1[0] = inside[0];
+     out1[1] = inside[1];
+     out1[2] = FindPlaneIntersectionPoint(plane_p, plane_n, inside[0], outside[0]);
  
-     out2[0] = *inside[1];
+     out2[0] = inside[1];
      out2[1] = out1[2];
-     out2[2] = FindPlaneIntersectionPoint(plane_p, plane_n, *inside[1], *outside[0]);
+     out2[2] = FindPlaneIntersectionPoint(plane_p, plane_n, inside[1], outside[0]);
  
      return 2;
    }
- 
+
    return 0;
 }
+
 }
