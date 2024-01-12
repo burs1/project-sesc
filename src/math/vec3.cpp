@@ -22,9 +22,9 @@ namespace eng::math {
   }
 
   auto Vec3::Lerp(const Vec3& other, float value) -> void {
-    x = (other.x - x) * value;
-    y = (other.y - y) * value;
-    z = (other.z - z) * value;
+    x = x + (other.x - x) * value;
+    y = y + (other.y - y) * value;
+    z = z + (other.z - z) * value;
  }
 
   auto Vec3::Normalized(const Vec3& v) -> Vec3 {
@@ -50,9 +50,9 @@ namespace eng::math {
 
   auto Vec3::Lerp(const Vec3& v1, const Vec3& v2, float value)  -> Vec3 {
     return Vec3(
-      (v2.x - v1.x) * value,
-      (v2.y - v1.y) * value,
-      (v2.z - v1.z) * value
+      v1.x + (v2.x - v1.x) * value,
+      v1.y + (v2.y - v1.y) * value,
+      v1.z + (v2.z - v1.z) * value
     );
   }
 

@@ -1,4 +1,5 @@
 #include "gfx/renderer3d.h"
+#include "gfx/mesh.h"
 
 #include <iostream>
 
@@ -34,13 +35,13 @@ auto Renderer3D::SetSunDirection(const math::Vec3 &dir) -> void {
 
 
 // ~ resources
-auto Renderer3D::LoadMesh(const char *path, const char *name) -> void {
+auto Renderer3D::LoadMesh(const char* path, const char* name, const char* sprite) -> void {
   // Check if mesh with such name already exists
   if (meshes_.contains(name)) { 
     throw std::runtime_error("Mesh with name \"" + std::string(name) + "\" already exists");
   }
 
-  meshes_[name] = new Mesh(path);
+  meshes_[name] = new Mesh(path, sprite);
 }
 
 
@@ -91,7 +92,7 @@ auto Renderer3D::CalcViewMatrix() -> void {
   math::Matrix4x4 rotmat;
   rotmat.SetRotation(cam_.rot);
   
-  viewmat_.LookAt(cam_.pos, cam_.pos + rotmat.Forward(), projmat_.Up());
+  viewmat_.LookAt(cam_.pos, cam_.pos + rotmat.Forward(), rotmat.Up());
 }
 
 
@@ -155,10 +156,16 @@ auto Renderer3D::FilterMeshTriangles(
           viewed_verts[ verts_id[2] ]
         },
         {
+          mesh->uv_coords[ mesh->triangles[i].uv_coords[0] ],
+          mesh->uv_coords[ mesh->triangles[i].uv_coords[1] ],
+          mesh->uv_coords[ mesh->triangles[i].uv_coords[2] ]
+        },
+        {
           int(mesh->triangles[i].color[0] * lightk),
           int(mesh->triangles[i].color[1] * lightk),
           int(mesh->triangles[i].color[2] * lightk)
-        }
+        },
+        mesh->sprite
       }
     );
   }
@@ -169,36 +176,53 @@ auto Renderer3D::FilterMeshTriangles(
 
 auto Renderer3D::DrawTriangles(
     std::vector<RawTriangle>& triangles_to_draw) -> void {
-  for (auto [verts, clr] : triangles_to_draw) {
+  for (auto& triangle : triangles_to_draw) {
     // project verts
     int clipped_triangles_count = 0;
-    math::Vec3 clipped_verts[2][3];
+    RawTriangle clipped_tris[2];
     clipped_triangles_count = TriangleClipAgainstPlane(
       math::Vec3(0.0f, 0.0f, 0.1f),
       math::Vec3(0.0f, 0.0f, 1.0f),
-      verts,
-      clipped_verts[0], clipped_verts[1]);
+      triangle,
+      clipped_tris[0], clipped_tris[1]);
  
     for (int i=0; i < clipped_triangles_count; ++i) {
       // Project verts
       for (int j=0; j < 3; ++j) {
-        clipped_verts[i][j] *= projmat_;
+        clipped_tris[i].verts[j] *= projmat_;
 
-        clipped_verts[i][j].x += 1;
-        clipped_verts[i][j].y += 1;
+        clipped_tris[i].verts[j].x += 1;
+        clipped_tris[i].verts[j].y += 1;
 
-        clipped_verts[i][j].x *= 0.5 * context_window_->drawer->resw;
-        clipped_verts[i][j].y *= -0.5 * context_window_->drawer->resh;
+        clipped_tris[i].verts[j].x *= 0.5 * context_window_->drawer->resw;
+        clipped_tris[i].verts[j].y *= -0.5 * context_window_->drawer->resh;
 
-        clipped_verts[i][j].y += context_window_->drawer->resh;
+        clipped_tris[i].verts[j].y += context_window_->drawer->resh;
       }
 
       // draw face
-      context_window_->drawer->SetDrawColor(clr[0], clr[1], clr[2]);
-      context_window_->drawer->DrawTriangle(
-        clipped_verts[i][0].x, clipped_verts[i][0].y,
-        clipped_verts[i][1].x, clipped_verts[i][1].y,
-        clipped_verts[i][2].x, clipped_verts[i][2].y
+      context_window_->drawer->SetDrawColor(
+        clipped_tris[i].color[0],
+        clipped_tris[i].color[1],
+        clipped_tris[i].color[2]);
+
+      if (clipped_tris[i].sprite[0] == '\0') {
+        context_window_->drawer->DrawTriangle(
+          clipped_tris[i].verts[0].x, clipped_tris[i].verts[0].y,
+          clipped_tris[i].verts[1].x, clipped_tris[i].verts[1].y,
+          clipped_tris[i].verts[2].x, clipped_tris[i].verts[2].y
+        );
+        continue;
+      }
+
+      context_window_->drawer->DrawTriangleTextured(
+        clipped_tris[i].verts[0].x, clipped_tris[i].verts[0].y,
+        clipped_tris[i].verts[1].x, clipped_tris[i].verts[1].y,
+        clipped_tris[i].verts[2].x, clipped_tris[i].verts[2].y,
+        clipped_tris[i].uv_coords[0].x, clipped_tris[i].uv_coords[0].y, 
+        clipped_tris[i].uv_coords[1].x, clipped_tris[i].uv_coords[1].y,
+        clipped_tris[i].uv_coords[2].x, clipped_tris[i].uv_coords[2].y,
+        clipped_tris[i].sprite
       );
     }
   }
@@ -209,23 +233,27 @@ auto Renderer3D::FindPlaneIntersectionPoint(
     math::Vec3 plane_p,
     math::Vec3 plane_n,
     const math::Vec3 &start,
-    const math::Vec3 &end) -> math::Vec3 {
+    const math::Vec3 &end,
+    float &t) -> math::Vec3 {
   plane_n.Normalize();
+
   float plane_d = -math::Vec3::Dot(plane_n, plane_p);
   float start_d = math::Vec3::Dot(start, plane_n);
   float end_d = math::Vec3::Dot(end, plane_n);
-  float t = (-plane_d - start_d) / (end_d - start_d);
+  t = (-plane_d - start_d) / (end_d - start_d);
+  
   math::Vec3 start_to_end = end - start;
   math::Vec3 inter_line = start_to_end * t;
+  
   return start + inter_line;
 }
 
 auto Renderer3D::TriangleClipAgainstPlane(
     math::Vec3 plane_p,
     math::Vec3 plane_n,
-    math::Vec3 in[3],
-    math::Vec3 out1[3],
-    math::Vec3 out2[3]) -> int {
+    RawTriangle in,
+    RawTriangle& out1,
+    RawTriangle& out2) -> int {
   plane_n.Normalize();
 
   auto dist = [&](math::Vec3 &p) {
@@ -233,63 +261,91 @@ auto Renderer3D::TriangleClipAgainstPlane(
     return math::Vec3::Dot(plane_n, p) - math::Vec3::Dot(plane_n, plane_p);
   };
 
-  math::Vec3 inside[3];
-  int insideCount = 0;
-   
-  math::Vec3 outside[3];
-  int outsideCount = 0;
- 
-  float d0 = dist(in[0]);
-  float d1 = dist(in[1]);
-  float d2 = dist(in[2]);
-   
-   if (d0 >= 0) {
-     inside[insideCount++] = in[0];
-   }
-   else {
-     outside[outsideCount++] = in[0];
-   }
+  math::Vec3* inside[3]; int inside_count = 0; 
+  math::Vec3* outside[3]; int outside_count = 0;
 
-   if (d1 >= 0) {
-     inside[insideCount++] = in[1];
-   }
-   else {
-     outside[outsideCount++] = in[1];
-   }
-
-   if (d2 >= 0) {
-     inside[insideCount++] = in[2];
-   }
-   else {
-     outside[outsideCount++] = in[2];
-   }
+  math::Vec2* inside_uv[3]; int inside_uv_count = 0;
+  math::Vec2* outside_uv[3]; int outside_uv_count = 0;
  
-   if (insideCount == 0) {
+  float d[3];
+  d[0] = dist(in.verts[0]);
+  d[1] = dist(in.verts[1]);
+  d[2] = dist(in.verts[2]);
+   
+  for (int i=0; i<3; ++i) {
+    if (d[i] >= 0) {
+     inside[inside_count++] = &in.verts[i];
+     inside_uv[inside_uv_count] = &in.uv_coords[i];
+    }
+    else {
+     outside[outside_count++] = &in.verts[i];
+     outside_uv[outside_uv_count++] = &in.uv_coords[i];
+    }
+  }
+ 
+   if (inside_count == 0) {
      return 0;
    }
  
-   if (insideCount == 3) {
-     out1[0] = in[0];
-     out1[1] = in[1];
-     out1[2] = in[2];
+   if (inside_count == 3) {
+     out1 = in;
      return 1;
    }
  
-   if (insideCount == 1 && outsideCount == 2) {
-     out1[0] = inside[0];
-     out1[1] = FindPlaneIntersectionPoint(plane_p, plane_n, inside[0], outside[0]);
-     out1[2] = FindPlaneIntersectionPoint(plane_p, plane_n, inside[0], outside[1]);
+   if (inside_count == 1 && outside_count == 2) {
+     float t;
+
+     out1.sprite = in.sprite;
+     out1.color[0] = in.color[0];
+     out1.color[1] = in.color[1];
+     out1.color[2] = in.color[2];
+
+     out1.verts[0] = *inside[0];
+     out1.uv_coords[0] = *inside_uv[0];
+
+     out1.verts[1] = FindPlaneIntersectionPoint(plane_p, plane_n, *inside[0], *outside[0], t);
+     out1.uv_coords[1].x = t * (outside_uv[0]->x - inside_uv[0]->x) + inside_uv[0]->x;
+     out1.uv_coords[1].y = t * (outside_uv[0]->y - inside_uv[0]->y) + inside_uv[0]->y;
+
+     out1.verts[2] = FindPlaneIntersectionPoint(plane_p, plane_n, *inside[0], *outside[1], t);
+     out1.uv_coords[2].x = t * (outside_uv[1]->x - inside_uv[1]->x) + inside_uv[1]->x;
+     out1.uv_coords[2].y = t * (outside_uv[1]->y - inside_uv[1]->y) + inside_uv[1]->y;
+
      return 1;
    }
  
-   if (insideCount == 2 && outsideCount == 1) {
-     out1[0] = inside[0];
-     out1[1] = inside[1];
-     out1[2] = FindPlaneIntersectionPoint(plane_p, plane_n, inside[0], outside[0]);
+   if (inside_count == 2 && outside_count == 1) {
+     float t;
+
+     out1.sprite = in.sprite;
+     out1.color[0] = in.color[0];
+     out1.color[1] = in.color[1];
+     out1.color[2] = in.color[2];
+
+     out1.verts[0] = *inside[0];
+     out1.uv_coords[0] = *inside_uv[0];
+
+     out1.verts[1] = *inside[1];
+     out1.uv_coords[1] = *inside_uv[1];
+
+     out1.verts[2] = FindPlaneIntersectionPoint(plane_p, plane_n, *inside[0], *outside[0], t);
+     out1.uv_coords[2].x = t * (outside_uv[0]->x - inside_uv[0]->x) + inside_uv[0]->x;
+     out1.uv_coords[2].y = t * (outside_uv[0]->y - inside_uv[0]->y) + inside_uv[0]->y;
  
-     out2[0] = inside[1];
-     out2[1] = out1[2];
-     out2[2] = FindPlaneIntersectionPoint(plane_p, plane_n, inside[1], outside[0]);
+     out2.sprite = in.sprite;
+     out2.color[0] = in.color[0];
+     out2.color[1] = in.color[1];
+     out2.color[2] = in.color[2];
+
+     out2.verts[0] = *inside[1];
+     out2.uv_coords[0] = *inside_uv[1];
+
+     out2.verts[1] = out1.verts[2];
+     out2.uv_coords[1] = out1.uv_coords[2];
+
+     out2.verts[2] = FindPlaneIntersectionPoint(plane_p, plane_n, *inside[1], *outside[0], t);
+     out2.uv_coords[2].x = t * (outside_uv[0]->x - inside_uv[1]->x) + inside_uv[1]->x;
+     out2.uv_coords[2].y = t * (outside_uv[0]->y - inside_uv[1]->y) + inside_uv[1]->y;
  
      return 2;
    }

@@ -24,9 +24,9 @@ namespace eng::gfx {
     auto SetSunDirection(const math::Vec3&)  -> void;
 
     // ~ Resources
-    auto LoadMesh(const char*, const char*)  -> void;
+    auto LoadMesh(const char*, const char*, const char* sprite="") -> void;
 
-    auto UnloadMesh(const char*)             -> void;
+    auto UnloadMesh(const char*)                                   -> void;
 
     // ~ Draw
     auto SetCameraTransform(const math::Vec3&, const math::Vec3&) -> void;
@@ -59,14 +59,16 @@ namespace eng::gfx {
     auto TriangleClipAgainstPlane(
       math::Vec3,
       math::Vec3,
-      math::Vec3[3],
-      math::Vec3[3], math::Vec3[3]) -> int;
+      RawTriangle,
+      RawTriangle&,
+      RawTriangle&) -> int;
 
     auto FindPlaneIntersectionPoint(
       math::Vec3,
       math::Vec3,
       const math::Vec3&,
-      const math::Vec3&) -> math::Vec3;
+      const math::Vec3&,
+      float&) -> math::Vec3;
 
     // vars
     sdl::Window *context_window_;

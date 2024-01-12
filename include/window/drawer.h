@@ -57,6 +57,10 @@ public:
   auto DrawTriangle(int, int, int, int, int, int,
                     bool fill=true) -> void;
 
+  auto DrawTriangleTextured(int, int, int, int, int, int,
+                            float, float, float, float, float, float,
+                            const char*) -> void;
+
   auto SetFont(const char*) -> void;
 
   auto DrawText(int, int, const char*, float, float) -> void;

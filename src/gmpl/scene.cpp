@@ -28,6 +28,13 @@ auto Scene::Update() -> void {
   for (auto entity : entities_by_type_["all"]) {
     entity->OnDraw();
   }
+
+  renderer3d_->RenderHeap();
+
+  // GUI draw
+  for (auto entity : entities_by_type_["all"]) {
+    entity->OnGUIDraw();
+  }
 }
 
 

@@ -163,6 +163,25 @@ auto Drawer::DrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, bool f
   DrawLine(x3, y3, x1, y1);
 }
 
+auto Drawer::DrawTriangleTextured(int x1, int y1,
+                                  int x2, int y2,
+                                  int x3, int y3,
+                                  float u1, float v1,
+                                  float u2, float v2,
+                                  float u3, float v3,
+                                  const char* name) -> void {
+  SDL_Vertex verts[] = {
+      {{(float)x1, (float)y1}, draw_color_, {u1, v1}},
+      {{(float)x2, (float)y2}, draw_color_, {u2, v2}},
+      {{(float)x3, (float)y3}, draw_color_, {u3, v3}}
+    };
+    SDL_RenderGeometry(
+      sdl_renderer_,
+      sprites_[name]->texture,
+      verts,
+      3, NULL, 0);
+}
+
 
 auto Drawer::DrawText(int x, int y, const char* text,
     float xscale, float yscale) -> void {

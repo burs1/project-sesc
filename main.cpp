@@ -1,36 +1,74 @@
+#include <SDL_scancode.h>
 #include <cmath>
 #include <iostream>
+#include <string>
 
+#include "math/matrix4x4.h"
 #include "math/vec3.h"
 #include "gmpl/scene.h"
 #include "gmpl/entity.h"
 #include "window/window.h"
 #include "gfx/renderer3d.h"
+#include "utils/funcs.h"
 
 using namespace std;
 using namespace eng;
 
-class Player : public gmpl::Entity {
+class Ship : public gmpl::Entity {
 private:
   void OnUpdate() override {
-    // Input
-    float forw_axis = (IsKeyDown(SDL_SCANCODE_W) - IsKeyDown(SDL_SCANCODE_S)) * GetDeltaTime();
-    float right_axis = (IsKeyDown(SDL_SCANCODE_D) - IsKeyDown(SDL_SCANCODE_A)) * GetDeltaTime() * 5.0f;
+    float dt = GetDeltaTime();
 
-    float rot_y = (IsKeyDown(SDL_SCANCODE_E) - IsKeyDown(SDL_SCANCODE_Q)) * GetDeltaTime() * 5.0f;
+    // Input
+    int thrust_axis = IsKeyDown(SDL_SCANCODE_W) - IsKeyDown(SDL_SCANCODE_S);
+
+    int tilt_axis   = IsKeyDown(SDL_SCANCODE_DOWN) - IsKeyDown(SDL_SCANCODE_UP);
+    int yaw_axis    = IsKeyDown(SDL_SCANCODE_RIGHT) - IsKeyDown(SDL_SCANCODE_LEFT);
+    int roll_axis   = IsKeyDown(SDL_SCANCODE_Q) - IsKeyDown(SDL_SCANCODE_E);
 
     // Rotate
-    rot.y += rot_y;
+    tilt = std::lerp(tilt, tilt_axis * max_tilt, mobility * dt);
+    yaw = std::lerp(yaw, yaw_axis * max_yaw, mobility * dt);
+    roll = std::lerp(roll, roll_axis * max_roll, mobility * dt);
 
+    rot += math::Vec3(tilt, yaw, roll) * dt;
+
+    // Move
     math::Matrix4x4 rotmat;
     rotmat.SetRotation(rot);
-    pos += rotmat.Forward() * forw_axis * 10.0f;
-    pos += rotmat.Right() * right_axis * 5.0f;
 
-    SetCameraTransform(pos, rot);
+    vel = math::Vec3::Lerp(
+      vel,
+      rotmat.Forward() * thrust_axis * max_thrust,
+      (thrust_axis != 0 ? acceleration_speed : decceleration_speed) * dt);
+
+    pos += vel * dt;
+
+    // Camera
+    math::Vec3 shake = rotmat.Right() * vel.Magnitude()
+                       * (utils::random_range(1, 100) / 100.0f)
+                       * shake_magnitude;
+    SetCameraTransform(pos + shake, rot);
+
+    SetCameraFOV(70 + 10 * (vel.Magnitude() / max_thrust));
   }
 
-  float thrust = 0;
+  float acceleration_speed = 1.0f;
+  float decceleration_speed = 0.25f;
+  float mobility = 0.5f;
+
+  float max_thrust = 5.0f;
+  float max_tilt   = 2.0f;
+  float max_yaw    = 2.0f;
+  float max_roll   = 2.0f;
+
+  float tilt   = 0.0f;
+  float yaw    = 0.0f;
+  float roll   = 0.0f;
+
+  math::Vec3 vel;
+
+  float shake_magnitude = 0.1f;
 };
 
 class Planet : public gmpl::Entity {
@@ -45,6 +83,11 @@ int main (int argc, char *argv[]) {
   sdl::Window *window = new sdl::Window("starfighters", 1280, 720, false);
   window->drawer->SetRenderLogicalSize(320, 180);
 
+  window->drawer->LoadSprite("assets/sprites/rock.png", "rock");
+
+  window->drawer->LoadFont("assets/fonts/superstar.ttf", "main", 16);
+  window->drawer->SetDrawFont("main");
+
   gfx::Renderer3D *renderer3d = new gfx::Renderer3D(window);
 
   float delta_time = 0.016;
@@ -52,18 +95,13 @@ int main (int argc, char *argv[]) {
   gmpl::Scene *scene = new gmpl::Scene(window, renderer3d, delta_time);
 
   // Load assets
-  renderer3d->LoadMesh("assets/models/planet.obj", "planet");
+  renderer3d->LoadMesh("assets/models/textured-cube.obj", "planet" ,"rock");
 
   auto planet = scene->InstantiateEntity<Planet>("planet");
-  planet->pos = math::Vec3(0, 0, 100);
+  planet->pos = math::Vec3(0, 0, 20);
   planet->rot = math::Vec3(0.2, 0.2, 0);
 
-  planet = scene->InstantiateEntity<Planet>("planet");
-  planet->pos = math::Vec3(0, 0, 400);
-  planet->rot = math::Vec3(0.2, 0.5, 0);
-  planet->scale = math::Vec3(5.0f, 1.0f, 5.0f);
-
-  scene->InstantiateEntity<Player>();
+  scene->InstantiateEntity<Ship>();
 
   // Delta time 
   int updateDelay = 16; //16 ticks ~ 61 fps
@@ -82,7 +120,6 @@ int main (int argc, char *argv[]) {
 
     window->UpdateEvents();
     scene->Update();
-    renderer3d->RenderHeap();
     window->UpdateSurface();
   }
 

@@ -75,6 +75,10 @@ protected:
     renderer3d_->SetCameraTransform(pos, rot);
   }
 
+  inline auto SetCameraFOV(float fov) -> void {
+    renderer3d_->SetPerspective(fov, 0.1f, 1000.0f);
+  }
+
 
   // ~ Entities
   inline auto FindEntityByType(const char* type, int ind) -> Entity* {
@@ -162,6 +166,8 @@ private:
   virtual auto OnDestroy() -> void {}
 
   virtual auto OnDraw()    -> void { DrawSelf(); }
+
+  virtual auto OnGUIDraw() -> void {}
   
   // Vars
   const char *type_ = "";

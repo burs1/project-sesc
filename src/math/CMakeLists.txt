@@ -2,6 +2,7 @@
 add_library(
   AdvMath
   vec3.cpp
+  vec2.cpp
   matrix4x4.cpp
   )
 
