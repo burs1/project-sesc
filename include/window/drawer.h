@@ -14,9 +14,12 @@ namespace eng::sdl {
 
 class Drawer {
 public:
-  Drawer(SDL_Window*);
+  // Static methods
+  static auto Init(SDL_Window*) -> void;
 
-  ~Drawer();
+  static auto GetInstance()     -> Drawer*;
+
+  static auto Quit()            -> void;
 
   // Not copyable
   Drawer(const Drawer&) = delete;
@@ -78,6 +81,10 @@ public:
   const int& resh;
 
 private:
+  Drawer(SDL_Window*);
+
+  ~Drawer();
+
   // Internal methods
   // ~ Draw
   auto RenderText(const char*, SDL_Rect*) -> SDL_Texture*;
@@ -94,6 +101,8 @@ private:
 
   int resw_ = 0.0f;
   int resh_ = 0.0f;
+
+  static Drawer* kInstance;
 };
 
 }

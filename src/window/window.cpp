@@ -1,8 +1,32 @@
 #include "window/window.h"
-#include <SDL_events.h>
-#include <SDL_mouse.h>
 
 namespace eng::sdl {
+
+Window* Window::kInstance = nullptr;
+
+// Static methods
+auto Window::Init(const char* name, int width, int height, bool fullscreen) -> void {
+  if (not kInstance) {
+    kInstance = new Window(name, width, height, fullscreen);
+    return;
+  }
+  throw std::runtime_error("Window is already created.");
+}
+
+auto Window::GetInstance() -> Window* {
+  if (kInstance) {
+    return kInstance;
+  }
+  throw std::runtime_error("Window doesn't exist.");
+}
+
+auto Window::Quit() -> void {
+  if (kInstance) {
+    delete kInstance;
+    return;
+  }
+  throw std::runtime_error("Window doesn't exist.");
+}
 
 Window::Window (const char *title, int width, int height, bool fullscreen)
   : is_fullscreen_(fullscreen), is_close_requested(is_close_requested_),
@@ -25,17 +49,23 @@ Window::Window (const char *title, int width, int height, bool fullscreen)
     throw std::runtime_error(SDL_GetError());
   }
 
-  // Initialize modules
-  input = new Input(sdl_window_);
-  audio = new Audio;
-  drawer = new Drawer(sdl_window_);
+  // Init systems
+  Input::Init(sdl_window_);
+  Audio::Init();
+  Drawer::Init(sdl_window_);
+
+  // Get system instances
+  input = Input::GetInstance();
+  audio = Audio::GetInstance();
+  drawer = Drawer::GetInstance();
 }
 
 
 Window::~Window() {
-  delete drawer;
-  delete audio;
-  delete input;
+  // Destroy systems
+  Input::Quit();
+  Audio::Quit();
+  Drawer::Quit();
 
   SDL_DestroyWindow(sdl_window_);
 
@@ -76,6 +106,11 @@ auto Window::GetTicks() -> Uint32 {
 
 auto Window::SetCursorLock(bool value) -> void {
   is_cursor_locked_ = value;
+}
+
+
+auto Window::GetSDLWindowInstance() -> SDL_Window* {
+  return sdl_window_;
 }
 
 

@@ -1,7 +1,34 @@
 #include "window/audio.h"
+#include <stdexcept>
 
 namespace eng::sdl {
-  
+
+Audio* Audio::kInstance = nullptr;
+
+// Static methods
+auto Audio::Init() -> void {
+  if (not kInstance) {
+    kInstance = new Audio();
+    return;
+  }
+  throw std::runtime_error("Audio system is already online.");
+}
+
+auto Audio::GetInstance() -> Audio* {
+  if (kInstance) {
+    return kInstance;
+  }
+  throw std::runtime_error("Audio system is offline.");
+}
+
+auto Audio::Quit() -> void {
+  if (kInstance) {
+    delete kInstance;
+    return;
+  }
+  throw std::runtime_error("Audio system is already offline.");
+}
+
 Audio::Audio() {
   Mix_Init(MIX_INIT_OGG);
   Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);

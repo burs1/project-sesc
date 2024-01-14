@@ -1,16 +1,39 @@
 #include "gfx/renderer3d.h"
-#include "gfx/mesh.h"
-
-#include <iostream>
+#include <stdexcept>
 
 namespace eng::gfx {
 
-Renderer3D::Renderer3D(sdl::Window* context_window)
-  : context_window_(context_window) {
+Renderer3D* Renderer3D::kInstance = nullptr;
+
+// Static methods
+auto Renderer3D::Init() -> void {
+  if (not kInstance) {
+    kInstance = new Renderer3D();
+    return;
+  }
+  throw std::runtime_error("Renderer3D is already online.");
+}
+
+auto Renderer3D::GetInstance() -> Renderer3D* {
+  if (kInstance) {
+    return kInstance;
+  }
+  throw std::runtime_error("Renderer3D is offline.");
+}
+
+auto Renderer3D::Quit() -> void {
+  if (kInstance) {
+    delete kInstance;
+    return;
+  }
+  throw std::runtime_error("Renderer3D is already offline.");
+}
+
+Renderer3D::Renderer3D()
+  : context_window_(sdl::Window::GetInstance()) {
     SetPerspective(70, 0.1f, 1000);
     SetSunDirection(math::Vec3(1, 1, 1));
 }
-
 
 Renderer3D::~Renderer3D() {
   // Unload all loaded meshes
@@ -25,6 +48,11 @@ Renderer3D::~Renderer3D() {
 auto Renderer3D::SetPerspective(float fov, float near, float far) -> void {
   float aspratio = (float)context_window_->drawer->resh / context_window_->drawer->resw;
   projmat_.SetPerspective(fov, aspratio, near, far);
+}
+
+auto Renderer3D::SetCameraTransform(const math::Vec3* pos,
+                                    const math::Vec3* rot) -> void {
+  camera_ = {pos, rot};
 }
 
 
@@ -46,12 +74,6 @@ auto Renderer3D::LoadMesh(const char* path, const char* name, const char* sprite
 
 
 // ~ draw
-auto Renderer3D::SetCameraTransform(const math::Vec3 &pos,
-                                    const math::Vec3 &rot) -> void {
-  cam_.pos = pos;
-  cam_.rot = rot;
-}
-
 auto Renderer3D::AddMeshToRenderHeap(
     const char* meshname,
     const math::Vec3 &pos,
@@ -90,9 +112,9 @@ auto Renderer3D::RenderHeap() -> void {
 // ~ Render
 auto Renderer3D::CalcViewMatrix() -> void {
   math::Matrix4x4 rotmat;
-  rotmat.SetRotation(cam_.rot);
+  rotmat.SetRotation(*camera_.rot);
   
-  viewmat_.LookAt(cam_.pos, cam_.pos + rotmat.Forward(), rotmat.Up());
+  viewmat_.LookAt(*camera_.pos, *camera_.pos + rotmat.Forward(), rotmat.Up());
 }
 
 
@@ -177,7 +199,7 @@ auto Renderer3D::FilterMeshTriangles(
 auto Renderer3D::DrawTriangles(
     std::vector<RawTriangle>& triangles_to_draw) -> void {
   for (auto& triangle : triangles_to_draw) {
-    // project verts
+    // Clip triangle
     int clipped_triangles_count = 0;
     RawTriangle clipped_tris[2];
     clipped_triangles_count = TriangleClipAgainstPlane(
@@ -186,45 +208,51 @@ auto Renderer3D::DrawTriangles(
       triangle,
       clipped_tris[0], clipped_tris[1]);
  
-    for (int i=0; i < clipped_triangles_count; ++i) {
-      // Project verts
-      for (int j=0; j < 3; ++j) {
-        clipped_tris[i].verts[j] *= projmat_;
-
-        clipped_tris[i].verts[j].x += 1;
-        clipped_tris[i].verts[j].y += 1;
-
-        clipped_tris[i].verts[j].x *= 0.5 * context_window_->drawer->resw;
-        clipped_tris[i].verts[j].y *= -0.5 * context_window_->drawer->resh;
-
-        clipped_tris[i].verts[j].y += context_window_->drawer->resh;
-      }
-
-      // draw face
-      context_window_->drawer->SetDrawColor(
-        clipped_tris[i].color[0],
-        clipped_tris[i].color[1],
-        clipped_tris[i].color[2]);
-
-      if (clipped_tris[i].sprite[0] == '\0') {
-        context_window_->drawer->DrawTriangle(
-          clipped_tris[i].verts[0].x, clipped_tris[i].verts[0].y,
-          clipped_tris[i].verts[1].x, clipped_tris[i].verts[1].y,
-          clipped_tris[i].verts[2].x, clipped_tris[i].verts[2].y
-        );
-        continue;
-      }
-
-      context_window_->drawer->DrawTriangleTextured(
-        clipped_tris[i].verts[0].x, clipped_tris[i].verts[0].y,
-        clipped_tris[i].verts[1].x, clipped_tris[i].verts[1].y,
-        clipped_tris[i].verts[2].x, clipped_tris[i].verts[2].y,
-        clipped_tris[i].uv_coords[0].x, clipped_tris[i].uv_coords[0].y, 
-        clipped_tris[i].uv_coords[1].x, clipped_tris[i].uv_coords[1].y,
-        clipped_tris[i].uv_coords[2].x, clipped_tris[i].uv_coords[2].y,
-        clipped_tris[i].sprite
-      );
+    for (int i=0; i<clipped_triangles_count; ++i) {
+      ProjectTriangle(clipped_tris[i]);
+      DrawTriangle(clipped_tris[i]);
     }
+  }
+}
+
+auto Renderer3D::DrawTriangle(RawTriangle& triangle) -> void {
+  context_window_->drawer->SetDrawColor(
+    triangle.color[0],
+    triangle.color[1],
+    triangle.color[2]);
+
+  if (triangle.sprite[0] == '\0') {
+    context_window_->drawer->DrawTriangle(
+      triangle.verts[0].x, triangle.verts[0].y,
+      triangle.verts[1].x, triangle.verts[1].y,
+      triangle.verts[2].x, triangle.verts[2].y
+    );
+    return;
+  }
+
+  context_window_->drawer->DrawTriangleTextured(
+    triangle.verts[0].x, triangle.verts[0].y,
+    triangle.verts[1].x, triangle.verts[1].y,
+    triangle.verts[2].x, triangle.verts[2].y,
+    triangle.uv_coords[0].x, triangle.uv_coords[0].y, 
+    triangle.uv_coords[1].x, triangle.uv_coords[1].y,
+    triangle.uv_coords[2].x, triangle.uv_coords[2].y,
+    triangle.sprite
+  );
+}
+
+
+auto Renderer3D::ProjectTriangle(RawTriangle& triangle) -> void {
+  for (int j=0; j < 3; ++j) {
+    triangle.verts[j] *= projmat_;
+
+    triangle.verts[j].x += 1;
+    triangle.verts[j].y += 1;
+
+    triangle.verts[j].x *= 0.5 * context_window_->drawer->resw;
+    triangle.verts[j].y *= -0.5 * context_window_->drawer->resh;
+
+    triangle.verts[j].y += context_window_->drawer->resh;
   }
 }
 

@@ -9,50 +9,52 @@
 #include "math/vec2.h"
 
 namespace eng::gfx {
-  struct Triangle {
-    int verts[3];
-    int uv_coords[3];
-    int color[3];
-  };
-  
-  struct RawTriangle {
-    math::Vec3 verts[3];
-    math::Vec2 uv_coords[3];
-    int color[3];
-    const char* sprite;
-  };
-  
-  class Mesh {
-  public:
-    Mesh(const char*, const char* sprite="");
 
-    ~Mesh();
+struct Triangle {
+  int verts[3];
+  int uv_coords[3];
+  int color[3];
+};
 
-    const char* sprite = "";
+struct RawTriangle {
+  math::Vec3 verts[3];
+  math::Vec2 uv_coords[3];
+  int color[3];
+  const char* sprite;
+};
 
-    math::Vec3* verts = nullptr;
-    math::Vec2* uv_coords = nullptr;
-    Triangle* triangles = nullptr;
+class Mesh {
+public:
+  Mesh(const char*, const char* sprite="");
 
-    unsigned verts_count = 0;
-    unsigned uv_coords_count = 0;
-    unsigned triangles_count = 0;
+  ~Mesh();
 
-    bool is_textured = false;
+  const char* sprite = "";
 
-  private:
-    auto LoadFromOBJ(const char*) -> void;
+  math::Vec3* verts = nullptr;
+  math::Vec2* uv_coords = nullptr;
+  Triangle* triangles = nullptr;
 
-    auto ReadOBJ(
-      std::ifstream&,
-      std::vector<math::Vec3>&,
-      std::vector<math::Vec2>&,
-      std::vector<Triangle>&) -> void;
+  unsigned verts_count = 0;
+  unsigned uv_coords_count = 0;
+  unsigned triangles_count = 0;
 
-    auto CopyDataFromVectors(
-      std::vector<math::Vec3>&,
-      std::vector<math::Vec2>&,
-      std::vector<Triangle>&) -> void;
+  bool is_textured = false;
 
-  };
+private:
+  auto LoadFromOBJ(const char*) -> void;
+
+  auto ReadOBJ(
+    std::ifstream&,
+    std::vector<math::Vec3>&,
+    std::vector<math::Vec2>&,
+    std::vector<Triangle>&) -> void;
+
+  auto CopyDataFromVectors(
+    std::vector<math::Vec3>&,
+    std::vector<math::Vec2>&,
+    std::vector<Triangle>&) -> void;
+
+};
+
 }

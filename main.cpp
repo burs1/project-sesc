@@ -1,7 +1,6 @@
-#include <SDL_scancode.h>
 #include <cmath>
-#include <iostream>
 #include <string>
+#include <iostream>
 
 #include "math/matrix4x4.h"
 #include "math/vec3.h"
@@ -16,6 +15,10 @@ using namespace eng;
 
 class Ship : public gmpl::Entity {
 private:
+  void OnCreate() override {
+    SetCameraTransform(&pos, &rot);
+  }
+
   void OnUpdate() override {
     float dt = GetDeltaTime();
 
@@ -45,11 +48,6 @@ private:
     pos += vel * dt;
 
     // Camera
-    math::Vec3 shake = rotmat.Right() * vel.Magnitude()
-                       * (utils::random_range(1, 100) / 100.0f)
-                       * shake_magnitude;
-    SetCameraTransform(pos + shake, rot);
-
     SetCameraFOV(70 + 10 * (vel.Magnitude() / max_thrust));
   }
 
@@ -80,7 +78,9 @@ private:
 
 int main (int argc, char *argv[]) {
   // Init systems
-  sdl::Window *window = new sdl::Window("starfighters", 1280, 720, false);
+  sdl::Window::Init("starfighters", 1280, 720, false);
+  sdl::Window *window = sdl::Window::GetInstance();
+
   window->drawer->SetRenderLogicalSize(320, 180);
 
   window->drawer->LoadSprite("assets/sprites/rock.png", "rock");
@@ -88,11 +88,11 @@ int main (int argc, char *argv[]) {
   window->drawer->LoadFont("assets/fonts/superstar.ttf", "main", 16);
   window->drawer->SetDrawFont("main");
 
-  gfx::Renderer3D *renderer3d = new gfx::Renderer3D(window);
+  gfx::Renderer3D::Init();
+  gfx::Renderer3D *renderer3d = gfx::Renderer3D::GetInstance();
 
-  float delta_time = 0.016;
-
-  gmpl::Scene *scene = new gmpl::Scene(window, renderer3d, delta_time);
+  gmpl::Scene::Init();
+  gmpl::Scene *scene = gmpl::Scene::GetInstance();
 
   // Load assets
   renderer3d->LoadMesh("assets/models/textured-cube.obj", "planet" ,"rock");
@@ -113,8 +113,6 @@ int main (int argc, char *argv[]) {
     Uint32 currentTime = window->GetTicks();
     if (currentTime < nextUpdateTime) { continue; }
 
-    delta_time = (currentTime - lastUpdateTime) / 1000.0f;
-
     lastUpdateTime = currentTime;
     nextUpdateTime = currentTime - currentTime % updateDelay + updateDelay;
 
@@ -124,9 +122,9 @@ int main (int argc, char *argv[]) {
   }
 
   // Clean up
-  delete scene;
-  delete renderer3d;
-  delete window;
+  gmpl::Scene::Quit();
+  gfx::Renderer3D::Quit();
+  sdl::Window::Quit();
 
   return 0;
 }

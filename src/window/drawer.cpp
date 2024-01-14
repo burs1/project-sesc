@@ -1,9 +1,33 @@
 #include "window/drawer.h"
-#include <SDL_render.h>
-#include <SDL_ttf.h>
 #include <stdexcept>
 
 namespace eng::sdl {
+
+Drawer* Drawer::kInstance = nullptr;
+
+// Static methods
+auto Drawer::Init(SDL_Window* sdl_window) -> void {
+  if (not kInstance) {
+    kInstance = new Drawer(sdl_window);
+    return;
+  }
+  throw std::runtime_error("Drawer is already online.");
+}
+
+auto Drawer::GetInstance() -> Drawer* {
+  if (kInstance) {
+    return kInstance;
+  }
+  throw std::runtime_error("Drawer is offline.");
+}
+
+auto Drawer::Quit() -> void {
+  if (kInstance) {
+    delete kInstance;
+    return;
+  }
+  throw std::runtime_error("Drawer is already offline.");
+}
 
 Drawer::Drawer(SDL_Window* sdl_window)
 : resw(resw_), resh(resh_) {
@@ -16,7 +40,6 @@ Drawer::Drawer(SDL_Window* sdl_window)
   if (IMG_Init(IMG_INIT_PNG) < 0) {
     throw std::runtime_error(IMG_GetError());
   }
-
 
   // Create renderer
   sdl_renderer_ = SDL_CreateRenderer(
@@ -31,7 +54,6 @@ Drawer::Drawer(SDL_Window* sdl_window)
 
   SDL_GetWindowSize(sdl_window, &resw_, &resh_);
 }
-
 
 Drawer::~Drawer() {
   // Unload all loaded fonts

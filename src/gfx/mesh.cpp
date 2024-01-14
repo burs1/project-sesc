@@ -1,9 +1,7 @@
 #include "gfx/mesh.h"
 
-#include <iostream>
-
 namespace eng::gfx {
-  Mesh::Mesh(const char *file, const char* sprite)
+  Mesh::Mesh(const char* file, const char* sprite)
     : sprite(sprite) {
     is_textured = sprite[0] != '\0';
     LoadFromOBJ(file);
@@ -149,7 +147,7 @@ namespace eng::gfx {
 
     // Copy uv coords data
     if (not is_textured) {
-      uv_coords = new math::Vec2[1];
+      uv_coords = new math::Vec2[0];
       return;
     }
 

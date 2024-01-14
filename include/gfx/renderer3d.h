@@ -11,75 +11,105 @@
 #include "window/window.h"
 
 namespace eng::gfx {
-  class Renderer3D {
-  public:
-    Renderer3D(sdl::Window*);
 
-    ~Renderer3D();
+class Renderer3D {
+public:
+  // Static methods
+  static auto Init()        -> void;
 
-    // Methods
-    // ~ Set up
-    auto SetPerspective(float, float, float) -> void;
+  static auto GetInstance() -> Renderer3D*;
 
-    auto SetSunDirection(const math::Vec3&)  -> void;
+  static auto Quit()        -> void;
 
-    // ~ Resources
-    auto LoadMesh(const char*, const char*, const char* sprite="") -> void;
+  // Not copyable
+  Renderer3D(const Renderer3D&) = delete;
 
-    auto UnloadMesh(const char*)                                   -> void;
+  Renderer3D operator=(const Renderer3D&) = delete;
 
-    // ~ Draw
-    auto SetCameraTransform(const math::Vec3&, const math::Vec3&) -> void;
+  // Not movable
+  Renderer3D(Renderer3D&&) = delete;
 
-    auto AddMeshToRenderHeap(const char*, const math::Vec3&,
-                             const math::Vec3&, const math::Vec3&) -> void;
+  Renderer3D& operator=(Renderer3D&&) = delete;
 
-    auto RenderHeap() -> void;
+  // Methods
+  // ~ Set up
+  auto SetPerspective(float, float, float)                      -> void;
 
-  private:
-    struct RenderData {
-      Mesh *mesh;
-      math::Vec3 pos, rot, scale;
-    };
+  auto SetCameraTransform(const math::Vec3*, const math::Vec3*) -> void;
 
-    // Internal methods
-    // ~ Render
-    auto CalcViewMatrix() -> void;
+  auto SetSunDirection(const math::Vec3&)                       -> void;
 
-    auto CalcTransformMatrix(
-      const math::Vec3&,
-      const math::Vec3&) -> math::Matrix4x4;
-    
-    auto FilterMeshTriangles(
-      const RenderData&,
-      std::vector<RawTriangle>&) -> void;
+  // ~ Resources
+  auto LoadMesh(const char*, const char*, const char* sprite="") -> void;
 
-    auto DrawTriangles(std::vector<RawTriangle>&) -> void;
+  auto UnloadMesh(const char*)                                   -> void;
 
-    auto TriangleClipAgainstPlane(
-      math::Vec3,
-      math::Vec3,
-      RawTriangle,
-      RawTriangle&,
-      RawTriangle&) -> int;
+  // ~ Draw
+  auto AddMeshToRenderHeap(const char*, const math::Vec3&,
+                           const math::Vec3&, const math::Vec3&) -> void;
 
-    auto FindPlaneIntersectionPoint(
-      math::Vec3,
-      math::Vec3,
-      const math::Vec3&,
-      const math::Vec3&,
-      float&) -> math::Vec3;
+  auto RenderHeap() -> void;
 
-    // vars
-    sdl::Window *context_window_;
-    struct { math::Vec3 pos, rot; } cam_;
+private:
+  Renderer3D();
 
-    math::Vec3 sun_direction_;
+  ~Renderer3D();
 
-    std::map< const char*, Mesh* > meshes_;
-
-    std::vector< RenderData > render_heap_;
-    math::Matrix4x4 projmat_;
-    math::Matrix4x4 viewmat_;
+  // Structs
+  struct RenderData {
+    Mesh *mesh;
+    math::Vec3 pos, rot, scale;
   };
+
+  // Internal methods
+  // ~ Render
+  auto CalcViewMatrix()                         -> void;
+
+  auto CalcTransformMatrix(
+    const math::Vec3&,
+    const math::Vec3&)                          -> math::Matrix4x4;
+  
+  auto FilterMeshTriangles(
+    const RenderData&,
+    std::vector<RawTriangle>&)                  -> void;
+
+  auto DrawTriangles(std::vector<RawTriangle>&) -> void;
+
+  auto DrawTriangle(RawTriangle&)               -> void;
+
+  auto ProjectTriangle(RawTriangle&)            -> void;
+
+  auto TriangleClipAgainstPlane(
+    math::Vec3,
+    math::Vec3,
+    RawTriangle,
+    RawTriangle&,
+    RawTriangle&) -> int;
+
+  auto FindPlaneIntersectionPoint(
+    math::Vec3,
+    math::Vec3,
+    const math::Vec3&,
+    const math::Vec3&,
+    float&) -> math::Vec3;
+
+  // vars
+  sdl::Window *context_window_;
+  struct {
+    const math::Vec3* pos;
+    const math::Vec3* rot;
+  } camera_;
+
+  math::Vec3 sun_direction_;
+
+  std::map< const char*, Mesh* > meshes_;
+
+  std::vector< RenderData > render_heap_;
+  math::Matrix4x4 projmat_;
+  math::Matrix4x4 viewmat_;
+
+  static Renderer3D* kInstance;
+
+};
+
 }

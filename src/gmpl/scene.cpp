@@ -1,12 +1,41 @@
 #include "gmpl/scene.h"
 #include "gmpl/entity.h"
+#include <stdexcept>
 
 namespace eng::gmpl {
 
-Scene::Scene(sdl::Window *context_window, gfx::Renderer3D *renderer3d,
-             const float& delta_time)
-  : context_window_(context_window), renderer3d_(renderer3d),
-    delta_time(delta_time) {}
+Scene* Scene::kInstance = nullptr;
+
+// Static methods
+auto Scene::Init() -> void {
+  if (not kInstance) {
+    kInstance = new Scene();
+    return;
+  }
+  throw std::runtime_error("Scene is already created.");
+}
+
+auto Scene::GetInstance() -> Scene* {
+  if (kInstance) {
+    return kInstance;
+  }
+  throw std::runtime_error("Scene doesn't exist.");
+}
+
+auto Scene::Quit() -> void {
+  if (kInstance) {
+    delete kInstance;
+    return;
+  }
+  throw std::runtime_error("Scene already doesn't exist.");
+}
+
+Scene::Scene()
+  : context_window_(sdl::Window::GetInstance()),
+    renderer3d_(gfx::Renderer3D::GetInstance()),
+    delta_time(delta_time_) {
+      last_update_time_ = context_window_->GetTicks();
+    }
 
 
 Scene::~Scene() {
@@ -19,6 +48,9 @@ Scene::~Scene() {
 // Methods
 // ~ Main
 auto Scene::Update() -> void {
+  delta_time_ = (context_window_->GetTicks() - last_update_time_) / 1000.0f;
+  last_update_time_ = context_window_->GetTicks();
+
   // Update all entities states
   for (auto entity : entities_by_type_["all"]) {
     entity->OnUpdate();
@@ -71,14 +103,10 @@ auto Scene::GetEntitiesCount(const char* type) -> int {
 
 // Internal methods
 auto Scene::InitializeEntity(Entity *entity, const char *meshname, const char *type, const char *tag) -> void {
-  entity->scene_ = this;
-  entity->renderer3d_ = renderer3d_;
-  entity->context_window_ = context_window_;
-  entity->type_ = type+2;
   entity->meshname = meshname;
 
   entities_by_type_["all"].push_back(entity);
-  entities_by_type_[entity->type_].push_back(entity);
+  entities_by_type_[type+2].push_back(entity);
 
   if (tag[0] != '\0') { entities_by_tag_[tag] = entity; }
 

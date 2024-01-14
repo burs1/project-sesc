@@ -12,9 +12,12 @@ namespace eng::gmpl {
 class Entity;
 class Scene {
 public:
-  Scene(sdl::Window*, gfx::Renderer3D*, const float&);
+  // Static methods
+  static auto Init()        -> void;
 
-  ~Scene();
+  static auto GetInstance() -> Scene*;
+
+  static auto Quit()        -> void;
 
   // Methods
   // ~ Main
@@ -40,15 +43,25 @@ public:
   const float &delta_time;
 
 private:
+  Scene();
+
+  ~Scene();
+
   // Internal methods
   auto InitializeEntity(Entity*, const char*, const char*, const char*) -> void;
 
-  // ~ vars
+  // Vars
+  float delta_time_ = 0.0f;
+
   sdl::Window *context_window_ = nullptr;
   gfx::Renderer3D *renderer3d_ = nullptr;
 
   std::map< const char*, Entity* >              entities_by_tag_;
   std::map< const char*, std::vector<Entity*> > entities_by_type_;
+
+  Uint32 last_update_time_ = 0;
+
+  static Scene* kInstance;
 
 };
 

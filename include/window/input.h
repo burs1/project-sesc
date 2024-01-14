@@ -7,7 +7,12 @@ namespace eng::sdl {
 
 class Input {
 public:
-  Input(SDL_Window*);
+  // Static methods
+  static auto Init(SDL_Window*) -> void;
+
+  static auto GetInstance()     -> Input*;
+
+  static auto Quit()            -> void;
 
   // Not copyable
   Input(const Input&) = delete;
@@ -44,6 +49,8 @@ public:
   auto SetCursorLock(bool)                -> void;
 
 private:
+  Input(SDL_Window*);
+  
   // Vars
   SDL_Window* sdl_window_ = nullptr;
 
@@ -59,6 +66,8 @@ private:
   int previous_mousey_ = 0;
 
   bool is_cursor_locked_ = false;
+
+  static Input* kInstance;
 
 };
 

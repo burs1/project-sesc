@@ -1,9 +1,36 @@
 #include "window/input.h"
+#include <stdexcept>
 
 namespace eng::sdl {
 
+Input* Input::kInstance = nullptr;
+
+auto Input::Init(SDL_Window* sdl_window) -> void {
+  if (not kInstance) {
+    kInstance = new Input(sdl_window);
+    return;
+  }
+  throw std::runtime_error("Input system is already online.");
+}
+
+auto Input::GetInstance() -> Input* {
+  if (kInstance) {
+    return kInstance;
+  }
+  throw std::runtime_error("Input system is offline.");
+}
+
+auto Input::Quit() -> void {
+  if (kInstance) {
+    delete kInstance;
+    return;
+  }
+  throw std::runtime_error("Input is alredy offline.");
+}
+
+
 Input::Input(SDL_Window* sdl_window)
-  : sdl_window_(sdl_window) {
+  : sdl_window_() {
   // Read keyboard and mouse states
   keyboard_state_ = SDL_GetKeyboardState(NULL);
   mouse_state_ = SDL_GetMouseState(&mousex_, &mousey_);
@@ -19,16 +46,24 @@ void Input::Update() {
   }
 
   previous_mouse_state_ = mouse_state_;
-  previous_mousex_ = mousex_;
-  previous_mousey_ = mousey_;
+
+  if (is_cursor_locked_) {
+    int w, h;
+    SDL_GetWindowSize(sdl_window_, &w, &h);
+
+    SDL_WarpMouseInWindow(sdl_window_, w/2, h/2);
+
+    previous_mousex_ = w/2;
+    previous_mousey_ = h/2;
+  }
+  else {
+    previous_mousex_ = mousex_;
+    previous_mousey_ = mousey_;
+  }
 
   // Read current keyboard and mouse states
   keyboard_state_ = SDL_GetKeyboardState(NULL);
   mouse_state_ = SDL_GetMouseState(&mousex_, &mousey_);
-
-  if (is_cursor_locked_) {
-    SDL_WarpMouseInWindow(sdl_window_, 0, 0);
-  }
 }
 
 
@@ -74,19 +109,13 @@ void Input::GetMousePosition(int *x, int *y) const {
 
 
 void Input::GetMouseDelta(int *x, int *y) const {
-  if (is_cursor_locked_) {
-    *x = mousex_;
-    *y = mousey_;
-    return;
-  }
-
   *x = mousex_ - previous_mousex_;
   *y = mousey_ - previous_mousey_;
 }
 
 
-auto Input::SetCursorLock(bool value) -> void {
-  is_cursor_locked_ = value;
+auto Input::SetCursorLock(bool lock) -> void {
+  is_cursor_locked_ = lock;
 }
 
 }

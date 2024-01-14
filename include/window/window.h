@@ -14,9 +14,12 @@ namespace eng::sdl {
 
 class Window {
 public:
-  explicit Window (const char*, int, int, bool fullscreen=false);
+  // Static methods
+  static auto Init(const char*, int, int, bool fullscreen=false) -> void;
 
-  ~Window();
+  static auto GetInstance() -> Window*;
+
+  static auto Quit()        -> void;
 
   // Not copyable
   Window(const Window&) = delete;
@@ -30,16 +33,19 @@ public:
 
   // Methods
   // ~ Main
-  auto UpdateEvents()      -> void;
+  auto UpdateEvents()         -> void;
 
-  auto UpdateSurface()     -> void;
+  auto UpdateSurface()        -> void;
 
   // ~ Window
-  auto ToggleFullscreen()  -> void;
+  auto ToggleFullscreen()     -> void;
 
-  auto GetTicks()          -> Uint32;
+  auto GetTicks()             -> Uint32;
 
-  auto SetCursorLock(bool) -> void;
+  auto SetCursorLock(bool)    -> void;
+
+  // ~ SDL
+  auto GetSDLWindowInstance() -> SDL_Window*;
   
   const bool &is_close_requested;
   const int &width, &height;
@@ -49,9 +55,12 @@ public:
   Drawer* drawer = nullptr;
 
 private:
+  explicit Window (const char*, int, int, bool);
+
+  ~Window();
+
   // Vars
-  SDL_Window *sdl_window_     = nullptr;
-  SDL_Renderer *sdl_renderer_ = nullptr;
+  SDL_Window *sdl_window_ = nullptr;
 
   int width_  = 0;
   int height_ = 0;
@@ -59,6 +68,8 @@ private:
   bool is_fullscreen_      = false;
   bool is_close_requested_ = false;
   bool is_cursor_locked_   = false;
+
+  static Window* kInstance;
 };
 
 }
