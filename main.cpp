@@ -124,7 +124,7 @@ int main (int argc, char *argv[]) {
   // Clean up
   gmpl::Scene::Quit();
   gfx::Renderer3D::Quit();
-  sdl::Window::Quit();
+  window::Window::Quit();
 
   return 0;
 }

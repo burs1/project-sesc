@@ -3,106 +3,111 @@
 #include <map>
 #include <string>
 #include <stdexcept>
+#include <type_traits>
 
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <SDl_image.h>
 
-#include "window/sprite.h"
+#include "window/texture.h"
 
-namespace eng::sdl {
+namespace eng::window {
 
 class Drawer {
 public:
   // Static methods
-  static auto Init(SDL_Window*) -> void;
+  template<typename T>
+  static auto Init() -> void {
+    static_assert(std::is_base_of<Drawer, T>(), "Class isn't derrived from Drawer.");
+    if (not kInstance) {
+      kInstance = new T();
+      return;
+    }
+    throw std::runtime_error("Drawer is already online.");
+  }
 
   static auto GetInstance()     -> Drawer*;
 
   static auto Quit()            -> void;
 
-  // Not copyable
-  Drawer(const Drawer&) = delete;
-
-  Drawer operator=(const Drawer&) = delete;
-
-  // Not movable
-  Drawer(Drawer&&) = delete;
-
-  Drawer& operator=(Drawer&&) = delete;
-
   // Methods
   // ~ Main
-  auto Present()                                    -> void;
+  virtual auto Present()                               -> void = 0;
 
   // ~ Resources
-  auto LoadSprite(const char*, const char*)         -> void;
+  virtual auto LoadTexture(const char*, const char*)   -> void = 0;
 
-  auto UnloadSprite(const char*)                    -> void;
+  virtual auto UnloadTexture(const char*)              -> void = 0;
 
-  auto LoadFont(const char*, const char*, int)      -> void;
+  virtual auto LoadFont(const char*, const char*, int) -> void = 0;
 
-  auto UnloadFont(const char*)                      -> void;
+  virtual auto UnloadFont(const char*)                 -> void = 0;
+
+  // ~ Setters
+  virtual auto SetClearColor(Uint8, Uint8, Uint8)      -> void = 0;
+
+  virtual auto SetDrawColor(Uint8, Uint8, Uint8)       -> void = 0;
+
+  virtual auto SetDrawFont(const char*)                -> void = 0;
+
+  // ~ Getters
+  virtual auto GetResolution(int*, int*)               -> void = 0;
+
+  virtual auto GetAspectRatio()                        -> float = 0;
+
+  virtual auto GetTexture(const char*)                 -> Texture* = 0;
 
   // ~ Draw
-  auto SetRenderLogicalSize(int w, int h)           -> void;
+  virtual auto DrawPoint(int, int)                     -> void = 0;
 
-  auto SetClearColor(Uint8, Uint8, Uint8)           -> void;
+  virtual auto DrawLine(int, int, int, int)            -> void = 0;
 
-  auto SetDrawColor(Uint8, Uint8, Uint8)            -> void;
+  virtual auto DrawTriangle(
+    int, int, 
+    int, int,
+    int, int,
+    bool fill=true) -> void = 0;
 
-  auto SetDrawFont(const char*)                     -> void;
+  virtual auto DrawTriangleTextured(
+    int, int,
+    int, int,
+    int, int,
+    float, float,
+    float, float,
+    float, float,
+    Texture*) -> void = 0;
 
-  auto DrawLine(int, int, int, int)                 -> void;
+  virtual auto DrawRect(int, int, int, int, bool fill=true)     -> void = 0;
 
-  auto DrawRect(int, int, int, int, bool fill=true) -> void;
-
-  auto DrawTriangle(int, int, int, int, int, int,
-                    bool fill=true) -> void;
-
-  auto DrawTriangleTextured(int, int, int, int, int, int,
-                            float, float, float, float, float, float,
-                            const char*) -> void;
-
-  auto SetFont(const char*) -> void;
-
-  auto DrawText(int, int, const char*, float, float) -> void;
-
-  auto DrawTextEx(int, int, const char*, float, float, float, 
-                  int h_align=0, int v_align=0) -> void;
-   
-  auto DrawSprite(int, int, const char*, float, float) -> void;
+  virtual auto DrawTexture(int, int, const char*, float, float) -> void = 0;
   
-  auto DrawSpriteEx(int, int, const char*, float, float, float,
-                    int h_align=0, int v_align=0)   -> void;
+  virtual auto DrawTextureEx(
+    int, int,
+    const char*,
+    float, float, float,
+    int halign=0, int valign=0) -> void = 0;
 
-  // Readonly vars
-  const int& resw;
-  const int& resh;
+  virtual auto DrawText(int, int, const char*, float, float) -> void = 0;
+
+  virtual auto DrawTextEx(
+    int, int,
+    const char*,
+    float, float, float, 
+    int halign=0, int valign=0) -> void = 0;
+
+  // Rendering
+  virtual auto RenderText(const char*, const char* font="") -> Texture* = 0;
+
+protected:
+  Drawer() = default;
+
+  virtual ~Drawer() = 0;
 
 private:
-  Drawer(SDL_Window*);
-
-  ~Drawer();
-
-  // Internal methods
-  // ~ Draw
-  auto RenderText(const char*, SDL_Rect*) -> SDL_Texture*;
-
   // Vars
-  SDL_Renderer* sdl_renderer_ = nullptr;
-
-  std::map<const char*, TTF_Font*> fonts_;
-  std::map< const char*, Sprite* > sprites_;
-  const char* draw_font_ = "";
-
-  SDL_Color clear_color_ = {0, 0, 0, 255};
-  SDL_Color draw_color_ = {255, 255, 255, 255};
-
-  int resw_ = 0.0f;
-  int resh_ = 0.0f;
-
   static Drawer* kInstance;
+
 };
+
 
 }

@@ -1,28 +1,19 @@
 #pragma once
 
-#include <SDL.h>
-#include <SDL_scancode.h>
+#include <stdexcept>
 
-namespace eng::sdl {
+#include <SDL.h>
+
+namespace eng::window {
 
 class Input {
 public:
   // Static methods
-  static auto Init(SDL_Window*) -> void;
+  static auto Init()        -> void;
 
-  static auto GetInstance()     -> Input*;
+  static auto GetInstance() -> Input*;
 
-  static auto Quit()            -> void;
-
-  // Not copyable
-  Input(const Input&) = delete;
-
-  Input operator=(const Input&) = delete;
-
-  // Not movable
-  Input(Input&&) = delete;
-
-  Input& operator=(Input&&) = delete;
+  static auto Quit()        -> void;
 
   // Methods
   // ~ Main
@@ -49,7 +40,7 @@ public:
   auto SetCursorLock(bool)                -> void;
 
 private:
-  Input(SDL_Window*);
+  Input();
   
   // Vars
   SDL_Window* sdl_window_ = nullptr;

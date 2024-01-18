@@ -8,7 +8,7 @@
 
 #include "math/vec3.h"
 
-namespace eng::sdl {
+namespace eng::window {
 
 class Audio {
 public:
@@ -18,16 +18,6 @@ public:
   static auto GetInstance() -> Audio*;
 
   static auto Quit()        -> void;
-
-  // Not copyable
-  Audio(const Audio&) = delete;
-
-  Audio operator=(const Audio&) = delete;
-
-  // Not movable
-  Audio(Audio&&) = delete;
-
-  Audio& operator=(Audio&&) = delete;
 
   // Methods
   // ~ Set up

@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 #include "window/window.h"
 #include "gfx/renderer3d.h"
@@ -24,11 +25,11 @@ public:
   auto Update() -> void;
 
   template<class T>
-  auto InstantiateEntity(const char* meshname="\0", const char* tag="\0") -> T* {
+  auto InstantiateEntity(const char* mesh_name="", const char* tag="") -> T* {
     static_assert(std::is_base_of<Entity, T>(), "This class doesn't derrives from the Entity class");
 
     T *entity = new T();
-    InitializeEntity(entity, meshname, typeid(entity).name(), tag);
+    InitializeEntity(entity, mesh_name, typeid(entity).name(), tag);
     return entity;
   }
 
@@ -53,7 +54,7 @@ private:
   // Vars
   float delta_time_ = 0.0f;
 
-  sdl::Window *context_window_ = nullptr;
+  window::Window *context_window_ = nullptr;
   gfx::Renderer3D *renderer3d_ = nullptr;
 
   std::map< const char*, Entity* >              entities_by_tag_;

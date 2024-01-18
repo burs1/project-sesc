@@ -10,7 +10,7 @@
 #include "window/audio.h"
 #include "window/drawer.h"
 
-namespace eng::sdl {
+namespace eng::window {
 
 class Window {
 public:

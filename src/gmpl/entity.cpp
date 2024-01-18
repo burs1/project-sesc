@@ -4,7 +4,7 @@ namespace eng::gmpl {
 
 Entity::Entity()
   : scene(gmpl::Scene::GetInstance()),
-    input(sdl::Input::GetInstance()),
-    drawer(sdl::Drawer::GetInstance()),
+    input(window::Input::GetInstance()),
+    drawer(window::Drawer::GetInstance()),
     renderer3d(gfx::Renderer3D::GetInstance()) {}
 }

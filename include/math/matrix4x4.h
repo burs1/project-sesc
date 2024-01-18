@@ -3,54 +3,58 @@
 #include "math/vec3.h"
 
 namespace eng::math {
-  class Vec3;
-  class Matrix4x4 {
-  public:
-    Matrix4x4();
 
-    Matrix4x4(const Matrix4x4&);
+class Vec3;
+class Matrix4x4 {
+public:
+  Matrix4x4();
 
-    // methods
-    auto SetIdentity()                   -> void;
+  Matrix4x4(const Matrix4x4&);
 
-    auto SetTranslation(const Vec3&)     -> void;
+  // methods
+  auto SetIdentity()                   -> void;
 
-    auto SetScale(const Vec3&)           -> void;
+  auto SetTranslation(const Vec3&)     -> void;
 
-    auto SetRotation(const Vec3&)             -> void;
+  auto SetScale(const Vec3&)           -> void;
 
-    auto SetRotationX(float)                  -> void;
-    
-    auto SetRotationY(float)                  -> void;
+  auto SetRotation(const Vec3&)        -> void;
 
-    auto SetRotationZ(float)                  -> void;
+  auto SetRotationX(float)              -> void;
+  
+  auto SetRotationY(float)              -> void;
 
-    auto Right()                    const -> Vec3;
+  auto SetRotationZ(float)              -> void;
 
-    auto Up()                       const -> Vec3;
+  auto SetTransform(const Vec3&, const Vec3&, const Vec3&) -> void;
 
-    auto Forward()                  const -> Vec3;
+  auto Right()                    const -> Vec3;
 
-    auto SetPerspective(float, float, float, float)                        -> void;
+  auto Up()                       const -> Vec3;
 
-    auto PointAt(const math::Vec3&, const math::Vec3&, const math::Vec3&)  -> void;
+  auto Forward()                  const -> Vec3;
 
-    auto LookAt(const math::Vec3&, const math::Vec3&, const math::Vec3&)   -> void;
+  auto SetPerspective(float, float, float, float)                        -> void;
 
-    auto Inverse() -> void;
+  auto PointAt(const math::Vec3&, const math::Vec3&, const math::Vec3&)  -> void;
 
-    // operators
-    auto operator*=(const Matrix4x4&)       -> void;
-    
-    auto operator*(const Matrix4x4&)  const -> Matrix4x4;
+  auto LookAt(const math::Vec3&, const math::Vec3&, const math::Vec3&)   -> void;
 
-    auto operator=(const Matrix4x4&)        -> void;
+  auto Inverse() -> void;
 
-    // vars
-    float m[4][4];
+  // operators
+  auto operator*=(const Matrix4x4&)       -> void;
+  
+  auto operator*(const Matrix4x4&)  const -> Matrix4x4;
 
-  private:
-    // internal methods
-    auto _copy(const Matrix4x4&) -> void;
-  };
+  auto operator=(const Matrix4x4&)        -> void;
+
+  // vars
+  float m[4][4];
+
+private:
+  // internal methods
+  auto _copy(const Matrix4x4&) -> void;
+};
+
 }

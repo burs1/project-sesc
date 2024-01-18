@@ -1,6 +1,7 @@
 #include "window/window.h"
+#include "window/drawer-sdl.h"
 
-namespace eng::sdl {
+namespace eng::window {
 
 Window* Window::kInstance = nullptr;
 
@@ -50,9 +51,9 @@ Window::Window (const char *title, int width, int height, bool fullscreen)
   }
 
   // Init systems
-  Input::Init(sdl_window_);
+  Input::Init();
   Audio::Init();
-  Drawer::Init(sdl_window_);
+  Drawer::Init<DrawerSDL>();
 
   // Get system instances
   input = Input::GetInstance();

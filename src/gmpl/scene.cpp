@@ -1,6 +1,5 @@
 #include "gmpl/scene.h"
 #include "gmpl/entity.h"
-#include <stdexcept>
 
 namespace eng::gmpl {
 
@@ -15,12 +14,14 @@ auto Scene::Init() -> void {
   throw std::runtime_error("Scene is already created.");
 }
 
+
 auto Scene::GetInstance() -> Scene* {
   if (kInstance) {
     return kInstance;
   }
   throw std::runtime_error("Scene doesn't exist.");
 }
+
 
 auto Scene::Quit() -> void {
   if (kInstance) {
@@ -30,12 +31,13 @@ auto Scene::Quit() -> void {
   throw std::runtime_error("Scene already doesn't exist.");
 }
 
+
 Scene::Scene()
-  : context_window_(sdl::Window::GetInstance()),
+  : context_window_(window::Window::GetInstance()),
     renderer3d_(gfx::Renderer3D::GetInstance()),
     delta_time(delta_time_) {
-      last_update_time_ = context_window_->GetTicks();
-    }
+  last_update_time_ = context_window_->GetTicks();
+}
 
 
 Scene::~Scene() {
@@ -61,9 +63,9 @@ auto Scene::Update() -> void {
     entity->OnDraw();
   }
 
-  renderer3d_->RenderHeap();
+  renderer3d_->RenderQueue();
 
-  // GUI draw
+  // Draw GUI
   for (auto entity : entities_by_type_["all"]) {
     entity->OnGUIDraw();
   }
@@ -102,8 +104,8 @@ auto Scene::GetEntitiesCount(const char* type) -> int {
 
 
 // Internal methods
-auto Scene::InitializeEntity(Entity *entity, const char *meshname, const char *type, const char *tag) -> void {
-  entity->meshname = meshname;
+auto Scene::InitializeEntity(Entity *entity, const char *mesh_name, const char *type, const char *tag) -> void {
+  entity->mesh_name = mesh_name;
 
   entities_by_type_["all"].push_back(entity);
   entities_by_type_[type+2].push_back(entity);
@@ -112,5 +114,6 @@ auto Scene::InitializeEntity(Entity *entity, const char *meshname, const char *t
 
   entity->OnCreate();
 }
+
 
 }

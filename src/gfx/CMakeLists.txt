@@ -1,5 +1,11 @@
 # vars
-set(SOURCE_FILES renderer3d.cpp mesh.cpp)
+set(
+  SOURCE_FILES
+  renderer3d.cpp
+  mesh.cpp
+  render-data.cpp
+  mesh-render-data.cpp
+  texture-render-data.cpp)
 set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 
 # add lib

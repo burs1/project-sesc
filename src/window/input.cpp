@@ -1,17 +1,18 @@
 #include "window/input.h"
-#include <stdexcept>
+#include "window/window.h"
 
-namespace eng::sdl {
+namespace eng::window {
 
 Input* Input::kInstance = nullptr;
 
-auto Input::Init(SDL_Window* sdl_window) -> void {
+auto Input::Init() -> void {
   if (not kInstance) {
-    kInstance = new Input(sdl_window);
+    kInstance = new Input();
     return;
   }
   throw std::runtime_error("Input system is already online.");
 }
+
 
 auto Input::GetInstance() -> Input* {
   if (kInstance) {
@@ -19,6 +20,7 @@ auto Input::GetInstance() -> Input* {
   }
   throw std::runtime_error("Input system is offline.");
 }
+
 
 auto Input::Quit() -> void {
   if (kInstance) {
@@ -29,8 +31,8 @@ auto Input::Quit() -> void {
 }
 
 
-Input::Input(SDL_Window* sdl_window)
-  : sdl_window_() {
+Input::Input()
+  : sdl_window_(Window::GetInstance()->GetSDLWindowInstance()) {
   // Read keyboard and mouse states
   keyboard_state_ = SDL_GetKeyboardState(NULL);
   mouse_state_ = SDL_GetMouseState(&mousex_, &mousey_);

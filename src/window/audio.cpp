@@ -1,7 +1,6 @@
 #include "window/audio.h"
-#include <stdexcept>
 
-namespace eng::sdl {
+namespace eng::window {
 
 Audio* Audio::kInstance = nullptr;
 
@@ -14,12 +13,14 @@ auto Audio::Init() -> void {
   throw std::runtime_error("Audio system is already online.");
 }
 
+
 auto Audio::GetInstance() -> Audio* {
   if (kInstance) {
     return kInstance;
   }
   throw std::runtime_error("Audio system is offline.");
 }
+
 
 auto Audio::Quit() -> void {
   if (kInstance) {
@@ -28,6 +29,7 @@ auto Audio::Quit() -> void {
   }
   throw std::runtime_error("Audio system is already offline.");
 }
+
 
 Audio::Audio() {
   Mix_Init(MIX_INIT_OGG);
@@ -44,6 +46,7 @@ Audio::~Audio() {
   Mix_Quit();
   // Map free
 }
+
 
 // Methods
 // ~ Set up

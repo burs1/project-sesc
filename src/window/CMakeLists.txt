@@ -1,5 +1,12 @@
 # vars
-set(SOURCE_FILES window.cpp sprite.cpp audio.cpp drawer.cpp input.cpp)
+set(
+  SOURCE_FILES
+  audio.cpp
+  drawer-sdl.cpp
+  drawer.cpp
+  input.cpp
+  texture.cpp
+  window.cpp)
 set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 
 # find packages

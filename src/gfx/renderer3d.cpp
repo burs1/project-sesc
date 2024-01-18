@@ -1,5 +1,5 @@
 #include "gfx/renderer3d.h"
-#include <stdexcept>
+#include "gfx/texture-render-data.h"
 
 namespace eng::gfx {
 
@@ -30,9 +30,9 @@ auto Renderer3D::Quit() -> void {
 }
 
 Renderer3D::Renderer3D()
-  : context_window_(sdl::Window::GetInstance()) {
+  : context_window_(window::Window::GetInstance()) {
     SetPerspective(70, 0.1f, 1000);
-    SetSunDirection(math::Vec3(1, 1, 1));
+    SetSunRotation(math::Vec3(1, 1, 1));
 }
 
 Renderer3D::~Renderer3D() {
@@ -44,68 +44,157 @@ Renderer3D::~Renderer3D() {
 
 
 // Methods
-// ~ Set up
-auto Renderer3D::SetPerspective(float fov, float near, float far) -> void {
-  float aspratio = (float)context_window_->drawer->resh / context_window_->drawer->resw;
-  projmat_.SetPerspective(fov, aspratio, near, far);
+// ~ Resources
+auto Renderer3D::LoadMesh(const char* path, const char* mesh_name, const char* sprite) -> void {
+  // Check if mesh with such name already exists
+  if (meshes_.contains(mesh_name)) {
+    throw std::runtime_error("Mesh with name \"" + std::string(mesh_name) + "\" already exists");
+  }
+
+  meshes_[mesh_name] = new Mesh(path, sprite);
 }
 
-auto Renderer3D::SetCameraTransform(const math::Vec3* pos,
-                                    const math::Vec3* rot) -> void {
+
+auto Renderer3D::UnloadMesh(const char* mesh_name) -> void {
+  delete meshes_[mesh_name];
+  meshes_.erase(mesh_name);
+}
+
+
+// ~ Setters
+auto Renderer3D::SetPerspective(float fov, float near, float far) -> void {
+  float aspect_ratio = context_window_->drawer->GetAspectRatio();
+  projmat_.SetPerspective(fov, aspect_ratio, near, far);
+
+  fov_ = fov;
+  near_ = near;
+  far_ = far;
+}
+
+
+auto Renderer3D::SetFOV(float fov) -> void {
+  float aspect_ratio = context_window_->drawer->GetAspectRatio();
+  projmat_.SetPerspective(fov, aspect_ratio, near_, far_);
+
+  fov_ = fov;
+}
+
+
+auto Renderer3D::SetNearPlane(float near) -> void {
+  float aspect_ratio = context_window_->drawer->GetAspectRatio();
+  projmat_.SetPerspective(fov_, aspect_ratio, near, far_);
+
+  near_ = near;
+}
+
+
+auto Renderer3D::SetFarPlane(float far) -> void {
+  float aspect_ratio = context_window_->drawer->GetAspectRatio();
+  projmat_.SetPerspective(fov_, aspect_ratio, near_, far);
+
+  far_ = far;
+}
+
+
+auto Renderer3D::SetPlanes(float far, float near) -> void {
+  float aspect_ratio = context_window_->drawer->GetAspectRatio();
+  projmat_.SetPerspective(fov_, aspect_ratio, near, far);
+
+  far_ = far;
+  near_ = near;
+}
+
+
+auto Renderer3D::SetCameraTransform(
+    const math::Vec3* pos,
+    const math::Vec3* rot) -> void {
   camera_ = {pos, rot};
 }
 
 
-auto Renderer3D::SetSunDirection(const math::Vec3 &dir) -> void {
+auto Renderer3D::SetSunRotation(const math::Vec3 &dir) -> void {
   sun_direction_ = dir;
   sun_direction_.Normalize();
 }
 
 
-// ~ resources
-auto Renderer3D::LoadMesh(const char* path, const char* name, const char* sprite) -> void {
-  // Check if mesh with such name already exists
-  if (meshes_.contains(name)) { 
-    throw std::runtime_error("Mesh with name \"" + std::string(name) + "\" already exists");
+// ~ Render
+auto Renderer3D::AddMeshToQueue(
+    const math::Vec3& pos,
+    const math::Vec3& rot,
+    const math::Vec3& scale,
+    const char* mesh_name) -> void {
+  Mesh* mesh = meshes_[mesh_name];
+  render_queue_.push_back(
+    MeshRenderData(
+      pos, rot, scale, mesh,
+      context_window_->drawer->GetTexture( mesh->GetTextureName() )
+    ));
+}
+
+
+auto Renderer3D::AddTextureToQueue(
+    const math::Vec3& pos,
+    const math::Vec3& rot,
+    const math::Vec3& scale,
+    const char* texture_name) -> void {
+  render_queue_.push_back(
+    TextureRenderData(
+      pos, rot, scale,
+      context_window_->drawer->GetTexture(texture_name)
+    ));
+}
+
+
+auto Renderer3D::AddTextToQueue(
+    const math::Vec3& pos,
+    const math::Vec3& rot,
+    const math::Vec3& scale,
+    const char* text,
+    const char* font) -> void {
+
+  window::Texture* text_texture;
+  if (rendered_text_.contains(text)) {
+    text_texture = rendered_text_[text].first;
+    rendered_text_[text].second = true;
+  }
+  else {
+    rendered_text_[text] = {context_window_->drawer->RenderText(text, font), true};
+    text_texture = rendered_text_[text].first;
   }
 
-  meshes_[name] = new Mesh(path, sprite);
+  render_queue_.push_back(
+    TextureRenderData(
+      pos, rot, scale,
+      text_texture
+    ));
 }
 
 
-// ~ draw
-auto Renderer3D::AddMeshToRenderHeap(
-    const char* meshname,
-    const math::Vec3 &pos,
-    const math::Vec3 &rot,
-    const math::Vec3 &scale) -> void {
-  render_heap_.push_back( RenderData{meshes_[meshname], pos, rot, scale} );
-}
-
-auto Renderer3D::RenderHeap() -> void {
+auto Renderer3D::RenderQueue() -> void {
   CalcViewMatrix();
   std::vector<RawTriangle> triangles_to_draw;
 
-  // Filter triangles
-  for(auto render_data : render_heap_) {
-    FilterMeshTriangles(render_data, triangles_to_draw);
+  // Render Queue
+  for(auto& render_data : render_queue_) {
+    ProcessTriangles(render_data, triangles_to_draw);
   }
 
-  // Sort triangles
-  sort(
-    triangles_to_draw.begin(),
-    triangles_to_draw.end(),
-    [](RawTriangle &trng1, RawTriangle &trng2) {
-      float z1 = trng1.verts[0].z + trng1.verts[1].z + trng1.verts[2].z;
-      float z2 = trng2.verts[0].z + trng2.verts[1].z + trng2.verts[2].z;
-      return z1 > z2;
-    }
-  );
-  
-  // Draw triangles
+  SortTriangles(triangles_to_draw);
+
   DrawTriangles(triangles_to_draw);
 
-  render_heap_.clear();
+  render_queue_.clear();
+
+  // Check rendered text
+  for (auto& [name, pair] : rendered_text_) {
+    if (not pair.second) {
+      delete pair.first;
+    }
+    else {
+      pair.second = false;
+    }
+  }
 }
 
 // Internal methods
@@ -113,87 +202,111 @@ auto Renderer3D::RenderHeap() -> void {
 auto Renderer3D::CalcViewMatrix() -> void {
   math::Matrix4x4 rotmat;
   rotmat.SetRotation(*camera_.rot);
-  
   viewmat_.LookAt(*camera_.pos, *camera_.pos + rotmat.Forward(), rotmat.Up());
 }
 
 
 auto Renderer3D::CalcTransformMatrix(
     const math::Vec3& pos,
-    const math::Vec3& rot) -> math::Matrix4x4 {
-  math::Matrix4x4 rotmat, translmat;
-  
-  rotmat.SetRotation(rot);
-  translmat.SetTranslation(pos);
-  
-  return rotmat * translmat;
+    const math::Vec3& rot,
+    const math::Vec3& scale) -> math::Matrix4x4 {
+  math::Matrix4x4 transf_mat;
+  transf_mat.SetTransform(pos, rot, scale);
+  return transf_mat;
 }
 
 
-auto Renderer3D::FilterMeshTriangles(
+auto Renderer3D::ProcessTriangles(
     const RenderData& render_data,
     std::vector<RawTriangle>& triangles_to_draw) -> void {
-  auto [mesh, pos, rot, scale] = render_data;
-  // Transform all verts
-  math::Matrix4x4 transfmat = CalcTransformMatrix(pos, rot);
+  // Calc transform matrix
+  math::Vec3 pos, rot, scale;
+  render_data.GetTransform(&pos, &rot, &scale);
+  math::Matrix4x4 transfmat = CalcTransformMatrix(pos, rot, scale);
 
-  math::Vec3* transformed_verts = new math::Vec3[mesh->verts_count];
-  for (int i=0; i < mesh->verts_count; ++i) {
-    transformed_verts[i] = mesh->verts[i] * scale * transfmat;
+  // Copy and transform verts
+  int verts_count;
+  math::Vec3* transformed_verts = render_data.GetVerts(&verts_count);
+  for (int i=0; i<verts_count; ++i) {
+    transformed_verts[i] *= scale * transfmat;
   }
 
-  // Transform all verts to view basis
-  math::Vec3* viewed_verts = new math::Vec3[mesh->verts_count];
-  for (int i=0; i < mesh->verts_count; ++i) {
+  // Copy and transform all verts to view basis
+  math::Vec3* viewed_verts = new math::Vec3[verts_count];
+  for (int i=0; i < verts_count; ++i) {
     viewed_verts[i] = transformed_verts[i] * viewmat_;
   }
+
+  // Copy uv coords
+  int uv_coords_count;
+  math::Vec2* uv_coords = render_data.GetUVCoords(&uv_coords_count);
   
+  // Copy triangles
+  int triangles_count;
+  const Triangle* triangles = render_data.GetTriangles(&triangles_count);
+
   // Filter verts
-  for (int i=0; i<mesh->triangles_count; ++i) {
-    int verts_id[] = {
-      mesh->triangles[i].verts[0],
-      mesh->triangles[i].verts[1],
-      mesh->triangles[i].verts[2]
+  for (int i=0; i<triangles_count; ++i) {
+    int verts_ids[] = {
+      triangles[i].verts_ids[0],
+      triangles[i].verts_ids[1],
+      triangles[i].verts_ids[2]
     };
 
     // Skip face if it's normal points at opposite side
     math::Vec3 normal = math::Vec3::Cross(
-        viewed_verts[ verts_id[1] ] - viewed_verts[ verts_id[0] ],
-        viewed_verts[ verts_id[2] ] - viewed_verts[ verts_id[0] ]);
+        viewed_verts[ verts_ids[1] ] - viewed_verts[ verts_ids[0] ],
+        viewed_verts[ verts_ids[2] ] - viewed_verts[ verts_ids[0] ]);
 
-    if (math::Vec3::Dot(normal, viewed_verts[ verts_id[0] ]) > 0.0f) { continue; }
+    if (math::Vec3::Dot(normal, viewed_verts[ verts_ids[0] ]) > 0.0f) {
+      continue;
+    }
 
     // Calc light
     normal = math::Vec3::Cross(
-        transformed_verts[ verts_id[1] ] - transformed_verts[ verts_id[0] ],
-        transformed_verts[ verts_id[2] ] - transformed_verts[ verts_id[0] ]);
+        transformed_verts[ verts_ids[1] ] - transformed_verts[ verts_ids[0] ],
+        transformed_verts[ verts_ids[2] ] - transformed_verts[ verts_ids[0] ]);
     normal.Normalize();
     float lightk = (1 + math::Vec3::Dot(normal, sun_direction_)) / 2;
 
     triangles_to_draw.push_back(
       RawTriangle{
         {
-          viewed_verts[ verts_id[0] ],
-          viewed_verts[ verts_id[1] ],
-          viewed_verts[ verts_id[2] ]
+          viewed_verts[ verts_ids[0] ],
+          viewed_verts[ verts_ids[1] ],
+          viewed_verts[ verts_ids[2] ]
         },
         {
-          mesh->uv_coords[ mesh->triangles[i].uv_coords[0] ],
-          mesh->uv_coords[ mesh->triangles[i].uv_coords[1] ],
-          mesh->uv_coords[ mesh->triangles[i].uv_coords[2] ]
+          uv_coords[ triangles[i].uv_coords_ids[0] ],
+          uv_coords[ triangles[i].uv_coords_ids[1] ],
+          uv_coords[ triangles[i].uv_coords_ids[2] ]
         },
         {
-          int(mesh->triangles[i].color[0] * lightk),
-          int(mesh->triangles[i].color[1] * lightk),
-          int(mesh->triangles[i].color[2] * lightk)
+          int(triangles[i].color[0] * lightk),
+          int(triangles[i].color[1] * lightk),
+          int(triangles[i].color[2] * lightk)
         },
-        mesh->sprite
+        render_data.GetTexture()
       }
     );
   }
 
   delete [] transformed_verts;
   delete [] viewed_verts;
+  delete [] uv_coords;
+  delete [] triangles;
+}
+
+auto Renderer3D::SortTriangles(std::vector<RawTriangle>& triangles) -> void {
+  sort(
+    triangles.begin(),
+    triangles.end(),
+    [](RawTriangle &trng1, RawTriangle &trng2) {
+      float z1 = trng1.verts[0].z + trng1.verts[1].z + trng1.verts[2].z;
+      float z2 = trng2.verts[0].z + trng2.verts[1].z + trng2.verts[2].z;
+      return z1 > z2;
+    }
+  );
 }
 
 auto Renderer3D::DrawTriangles(
@@ -202,7 +315,7 @@ auto Renderer3D::DrawTriangles(
     // Clip triangle
     int clipped_triangles_count = 0;
     RawTriangle clipped_tris[2];
-    clipped_triangles_count = TriangleClipAgainstPlane(
+    clipped_triangles_count = ClipTriangleAgainstPlane(
       math::Vec3(0.0f, 0.0f, 0.1f),
       math::Vec3(0.0f, 0.0f, 1.0f),
       triangle,
@@ -221,7 +334,7 @@ auto Renderer3D::DrawTriangle(RawTriangle& triangle) -> void {
     triangle.color[1],
     triangle.color[2]);
 
-  if (triangle.sprite[0] == '\0') {
+  if (not triangle.texture) {
     context_window_->drawer->DrawTriangle(
       triangle.verts[0].x, triangle.verts[0].y,
       triangle.verts[1].x, triangle.verts[1].y,
@@ -237,22 +350,25 @@ auto Renderer3D::DrawTriangle(RawTriangle& triangle) -> void {
     triangle.uv_coords[0].x, triangle.uv_coords[0].y, 
     triangle.uv_coords[1].x, triangle.uv_coords[1].y,
     triangle.uv_coords[2].x, triangle.uv_coords[2].y,
-    triangle.sprite
+    triangle.texture
   );
 }
 
 
 auto Renderer3D::ProjectTriangle(RawTriangle& triangle) -> void {
+  int width, height;
+  context_window_->drawer->GetResolution(&width, &height);
+  
   for (int j=0; j < 3; ++j) {
     triangle.verts[j] *= projmat_;
 
     triangle.verts[j].x += 1;
     triangle.verts[j].y += 1;
 
-    triangle.verts[j].x *= 0.5 * context_window_->drawer->resw;
-    triangle.verts[j].y *= -0.5 * context_window_->drawer->resh;
+    triangle.verts[j].x *= 0.5 * width;
+    triangle.verts[j].y *= -0.5 * height;
 
-    triangle.verts[j].y += context_window_->drawer->resh;
+    triangle.verts[j].y += height;
   }
 }
 
@@ -276,7 +392,7 @@ auto Renderer3D::FindPlaneIntersectionPoint(
   return start + inter_line;
 }
 
-auto Renderer3D::TriangleClipAgainstPlane(
+auto Renderer3D::ClipTriangleAgainstPlane(
     math::Vec3 plane_p,
     math::Vec3 plane_n,
     RawTriangle in,
@@ -323,7 +439,7 @@ auto Renderer3D::TriangleClipAgainstPlane(
    if (inside_count == 1 && outside_count == 2) {
      float t;
 
-     out1.sprite = in.sprite;
+     out1.texture = in.texture;
      out1.color[0] = in.color[0];
      out1.color[1] = in.color[1];
      out1.color[2] = in.color[2];
@@ -345,10 +461,8 @@ auto Renderer3D::TriangleClipAgainstPlane(
    if (inside_count == 2 && outside_count == 1) {
      float t;
 
-     out1.sprite = in.sprite;
-     out1.color[0] = in.color[0];
-     out1.color[1] = in.color[1];
-     out1.color[2] = in.color[2];
+     // Copy texture and color
+     out1 = in;
 
      out1.verts[0] = *inside[0];
      out1.uv_coords[0] = *inside_uv[0];
@@ -360,10 +474,8 @@ auto Renderer3D::TriangleClipAgainstPlane(
      out1.uv_coords[2].x = t * (outside_uv[0]->x - inside_uv[0]->x) + inside_uv[0]->x;
      out1.uv_coords[2].y = t * (outside_uv[0]->y - inside_uv[0]->y) + inside_uv[0]->y;
  
-     out2.sprite = in.sprite;
-     out2.color[0] = in.color[0];
-     out2.color[1] = in.color[1];
-     out2.color[2] = in.color[2];
+     // Copy texture and color
+     out2 = in;
 
      out2.verts[0] = *inside[1];
      out2.uv_coords[0] = *inside_uv[1];
