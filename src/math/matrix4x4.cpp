@@ -34,19 +34,20 @@ auto Matrix4x4::SetTranslation(const Vec3& v) -> void {
 
 
 auto Matrix4x4::SetRotation(const Vec3& v) -> void {
-  Matrix4x4 xrot, yrot, zrot;
+  Matrix4x4 mat;
 
-  xrot.SetRotationX(v.x);
-  yrot.SetRotationY(v.y);
-  zrot.SetRotationZ(v.z);
+  SetRotationX(v.x);
+  
+  mat.SetRotationY(v.y);
+  *this *= mat;
 
-  operator*=(xrot);
-  operator*=(yrot);
-  operator*=(zrot);
+  mat.SetRotationZ(v.z);
+  *this *= mat;
 }
 
 
 auto Matrix4x4::SetRotationX(float rot) -> void {
+  SetIdentity();
   m[0][0] = 1.0f;
   m[1][1] = cosf(rot);
   m[1][2] = sinf(rot);
@@ -57,6 +58,7 @@ auto Matrix4x4::SetRotationX(float rot) -> void {
 
 
 auto Matrix4x4::SetRotationY(float rot) -> void {
+  SetIdentity();
   m[0][0] = cosf(rot);
   m[0][2] = -sinf(rot);
   m[2][0] = sinf(rot);
@@ -67,6 +69,7 @@ auto Matrix4x4::SetRotationY(float rot) -> void {
 
 
 auto Matrix4x4::SetRotationZ(float rot) -> void {
+  SetIdentity();
   m[0][0] = cosf(rot);
   m[0][1] = sinf(rot);
   m[1][0] = -sinf(rot);
@@ -77,6 +80,7 @@ auto Matrix4x4::SetRotationZ(float rot) -> void {
 
 
 auto Matrix4x4::SetScale(const Vec3& v) -> void {
+  SetIdentity();
   m[0][0] = v.x;
   m[1][1] = v.y;
   m[2][2] = v.z;
@@ -88,12 +92,12 @@ auto Matrix4x4::SetTransform(
     const Vec3& rot,
     const Vec3& scale) -> void {
   Matrix4x4 mat;
-  SetTranslation(pos);
+  SetScale(scale);
 
-  mat.SetRotation(rot);
+  mat.SetRotation(pos);
   *this *= mat;
 
-  mat.SetScale(scale);
+  mat.SetTranslation(scale);
   *this *= mat;
 }
 

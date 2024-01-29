@@ -7,7 +7,8 @@ Texture::Texture(SDL_Texture* texture) : texture_(texture) {
 }
 
 
-Texture::Texture(SDL_Texture* texture, SDL_Rect rect) : texture_(texture), rect_(rect) {}
+Texture::Texture(SDL_Texture* texture, SDL_Rect rect)
+  : texture_(texture), rect_(rect) {}
 
 
 Texture::~Texture() {

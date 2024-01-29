@@ -1,6 +1,5 @@
 #pragma once
 
-#include <SDL_scancode.h>
 #include <string>
 #include <stdexcept>
 
@@ -218,7 +217,7 @@ private:
 
   virtual auto OnDraw()    -> void { DrawSelf(); }
 
-  virtual auto OnGUIDraw() -> void {}
+  virtual auto OnDrawGUI() -> void {}
   
 };
 

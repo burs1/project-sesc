@@ -8,6 +8,9 @@ set(
   texture-render-data.cpp)
 set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 
+# find packages
+find_package(spdlog REQUIRED)
+
 # add lib
 add_library(GFX ${SOURCE_FILES})
 
@@ -19,4 +22,5 @@ target_link_libraries(
   GFX
   PUBLIC AdvMath
   PUBLIC Window
+  PUBLIC spdlog::spdlog
 )

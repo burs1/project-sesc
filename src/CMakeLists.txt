@@ -1,6 +1,9 @@
 # vars
 set(INCLUDE_DIRS window)
 
+# find packages
+find_package(spdlog REQUIRED)
+
 # add subdirs
 add_subdirectory(gfx)
 add_subdirectory(gmpl)
@@ -20,4 +23,5 @@ target_link_libraries(
   PUBLIC Window
   PUBLIC Gameplay
   PUBLIC AdvMath
+  PUBLIC spdlog::spdlog
 )

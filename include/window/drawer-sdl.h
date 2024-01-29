@@ -1,4 +1,7 @@
+#include <map>
+
 #include "window/drawer.h"
+#include "window/texture.h"
 
 namespace eng::window {
 

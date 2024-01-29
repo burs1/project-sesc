@@ -19,11 +19,13 @@ namespace eng::math {
     auto Lerp(const Vec2&, float) -> void;
 
     // static methods
-    static auto Normalized(const Vec2&)               -> Vec2;
+    static auto Normalized(const Vec2&)                -> Vec2;
 
-    static auto Dot(const Vec2&, const Vec2&)         -> float;
+    static auto Dot(const Vec2&, const Vec2&)          -> float;
 
-    static auto Lerp(const Vec2&, const Vec2&, float) -> Vec2;
+    static auto Lerp(const Vec2&, const Vec2&, float)  -> Vec2;
+
+    static auto AngleBetween(const Vec2&, const Vec2&) -> float;
 
     // operators
     auto operator=(const Vec2&)         -> void;

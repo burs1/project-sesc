@@ -1,9 +1,4 @@
 #pragma once
-
-#include <map>
-#include <string>
-#include <stdexcept>
-
 #include <SDL.h>
 
 #include "window/input.h"
@@ -14,56 +9,71 @@ namespace eng::window {
 
 class Window {
 public:
-  // Static methods
-  static auto Init(const char*, int, int, bool fullscreen=false) -> void;
+  // - Static methods -
+  // Creates the window instance. If it is alredy opened,
+  // throws an exception.
+  static auto Create(const char*, int, int) -> void;
 
+  // Returns a pointer to a window. If window doesn't exist,
+  // throws an exception.
   static auto GetInstance() -> Window*;
 
-  static auto Quit()        -> void;
+  // Destroys the window instance. If window doesn't exist,
+  // throws an exception.
+  static auto Destroy()     -> void;
 
-  // Not copyable
+  // ! Not copyable
   Window(const Window&) = delete;
-
   Window operator=(const Window&) = delete;
 
-  // Not movable
+  // ! Not movable
   Window(Window&&) = delete;
-
   Window& operator=(Window&&) = delete;
 
-  // Methods
-  // ~ Main
-  auto UpdateEvents()         -> void;
+  // - Methods -
+  // Returns a pointer to the SDL window instance.
+  auto GetSDLWindowInstance() const -> SDL_Window*;
 
-  auto UpdateSurface()        -> void;
+  // Returns an unsigned 32-bit value representing
+  // the number of milliseconds since the SDL library initialized.
+  auto GetTicks()             const -> Uint32;
 
-  // ~ Window
-  auto ToggleFullscreen()     -> void;
+  // Assigns window pixel size to passed pointers.
+  auto GetSize(int*, int*)    const -> void;
 
-  auto GetTicks()             -> Uint32;
+  // Returns the value of the variable "is_close_requested"
+  // that assigns in the "UpdateSurface" method.
+  // It sets to true if SDL_QUIT event polled.
+  auto IsCloseRequested()     const -> bool;
 
-  auto SetCursorLock(bool)    -> void;
+  // Polls SDL events and updates input system.
+  auto PollEvents()                 -> void;
 
-  // ~ SDL
-  auto GetSDLWindowInstance() -> SDL_Window*;
-  
-  const bool &is_close_requested;
-  const int &width, &height;
-
-  Input* input   = nullptr;
-  Audio* audio   = nullptr;
-  Drawer* drawer = nullptr;
+  // Calls drawer "Present" method that updates window surface,
+  // showing the rendered frame.
+  auto UpdateSurface()              -> void;
 
 private:
-  explicit Window (const char*, int, int, bool);
+  // - Internal static methods -
+  // Creates ang gets instances of all subsystems:
+  // [input system], [audio system] and [drawer]
+  auto static InitSubsytems()       -> void;
+  
+  // Contrstructor
+  explicit Window (const char*, int, int);
 
+  // Destructor
   ~Window();
 
   // Vars
-  SDL_Window *sdl_window_ = nullptr;
+  Input* input_;
+  Audio* audio_;
+  Drawer* drawer_;
 
-  int width_  = 0;
-  int height_ = 0;
+  SDL_Window *sdl_window_;
+
+  int width_;
+  int height_;
 
   bool is_fullscreen_      = false;
   bool is_close_requested_ = false;

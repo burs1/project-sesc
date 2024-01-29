@@ -17,7 +17,7 @@ auto MeshRenderData::GetVerts(int* verts_count) const -> math::Vec3* {
 }
 
 
-auto MeshRenderData::GetUVCoords(int* uv_coords_count) const -> math::Vec2* {
+auto MeshRenderData::GetUVCoords(int* uv_coords_count) const -> const math::Vec2* {
   return mesh_->GetUVCoords(uv_coords_count);
 }
 

@@ -19,10 +19,10 @@ public:
   ~Mesh();
 
   // Methods
-  // ~ Getters
+  // ~ Getters 
   auto GetVerts(int*)     const -> math::Vec3*;
 
-  auto GetUVCoords(int*)  const -> math::Vec2*;
+  auto GetUVCoords(int*)  const -> const math::Vec2*;
 
   auto GetTriangles(int*) const -> const Triangle*;
 

@@ -15,22 +15,22 @@ public:
     const math::Vec3&,
     window::Texture*);
 
-  ~TextureRenderData();
+  ~TextureRenderData() override;
 
-  // Methods
+  // - Methods -
   // ~ Getters
   auto GetVerts(int*)     const -> math::Vec3* override;
 
-  auto GetUVCoords(int*)  const -> math::Vec2* override;
+  auto GetUVCoords(int*)  const -> const math::Vec2* override;
 
   auto GetTriangles(int*) const -> const Triangle* override;
 
   auto GetTexture()       const -> window::Texture* override;
 
 private:
-  window::Texture* texture_;
-  
-  Triangle* triangles_;
+  window::Texture* texture_ = nullptr;
+  Triangle* triangles_ = nullptr;
+  math::Vec2* uv_coords_ = nullptr;
 
 };
 

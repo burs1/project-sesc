@@ -13,11 +13,19 @@ TextureRenderData::TextureRenderData(
     Triangle{{0, 1, 2}, {0, 1, 2}, {255, 255, 255}},
     Triangle{{1, 2, 3}, {1, 2, 3}, {255, 255, 255}}
   };
+
+  uv_coords_ = new math::Vec2[] {
+    math::Vec2(0.0f, 0.0f),
+    math::Vec2(1.0f, 0.0f),
+    math::Vec2(1.0f, 1.0f),
+    math::Vec2(0.0f, 1.0f)
+  };
 }
 
 
 TextureRenderData::~TextureRenderData() {
-  delete[] triangles_;
+  delete [] triangles_;
+  delete [] uv_coords_;
 }
 
 
@@ -40,17 +48,9 @@ auto TextureRenderData::GetVerts(int* verts_count) const -> math::Vec3* {
 }
 
 
-auto TextureRenderData::GetUVCoords(int* uv_coords_count) const -> math::Vec2* {
+auto TextureRenderData::GetUVCoords(int* uv_coords_count) const -> const math::Vec2* {
   *uv_coords_count = 4;
-
-  math::Vec2* arr = new math::Vec2[]{
-    math::Vec2(0.0f, 0.0f),
-    math::Vec2(1.0f, 0.0f),
-    math::Vec2(1.0f, 1.0f),
-    math::Vec2(0.0f, 1.0f)
-  };
-
-  return arr;
+  return uv_coords_;
 }
 
 

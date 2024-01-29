@@ -45,8 +45,7 @@ DrawerSDL::~DrawerSDL() {
 }
 
 
-// Methods
-// ~ Main
+// - Methods -
 auto DrawerSDL::Present() -> void {
   SDL_RenderPresent(sdl_renderer_);
 
@@ -60,7 +59,6 @@ auto DrawerSDL::Present() -> void {
 }
 
 
-// ~ Resources
 auto DrawerSDL::LoadTexture(const char *path, const char *name) -> void {
   if (textures_.contains(name)) {
     throw std::runtime_error("Sprite with name \"" + std::string(name) + "\" already exists");
@@ -103,7 +101,6 @@ auto DrawerSDL::UnloadFont(const char* name) -> void {
 }
 
 
-// ~ Setters
 auto DrawerSDL::SetClearColor(Uint8 r, Uint8 g, Uint8 b) -> void {
   clear_color_ = SDL_Color{r, g, b, 255};
 }
@@ -120,7 +117,6 @@ auto DrawerSDL::SetDrawFont(const char* font) -> void {
 }
 
 
-// ~ Getters
 auto DrawerSDL::GetResolution(int* width, int* height) -> void {
   SDL_GetWindowSize(sdl_window_, width, height);
 }
@@ -129,7 +125,7 @@ auto DrawerSDL::GetResolution(int* width, int* height) -> void {
 auto DrawerSDL::GetAspectRatio() -> float {
   int width, height;
   SDL_GetWindowSize(sdl_window_, &width, &height);
-  return (float)width / height;
+  return (float)height / width;
 }
 
 
@@ -166,12 +162,12 @@ auto DrawerSDL::DrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, boo
 
 
 auto DrawerSDL::DrawTriangleTextured(int x1, int y1,
-                                  int x2, int y2,
-                                  int x3, int y3,
-                                  float u1, float v1,
-                                  float u2, float v2,
-                                  float u3, float v3,
-                                  Texture* texture) -> void {
+                                     int x2, int y2,
+                                     int x3, int y3,
+                                     float u1, float v1,
+                                     float u2, float v2,
+                                     float u3, float v3,
+                                     Texture* texture) -> void {
   SDL_Vertex verts[] = {
       {{(float)x1, (float)y1}, draw_color_, {u1, v1}},
       {{(float)x2, (float)y2}, draw_color_, {u2, v2}},

@@ -14,11 +14,11 @@ class Entity;
 class Scene {
 public:
   // Static methods
-  static auto Init()        -> void;
+  static auto Create()      -> void;
 
   static auto GetInstance() -> Scene*;
 
-  static auto Quit()        -> void;
+  static auto Destroy()     -> void;
 
   // Methods
   // ~ Main

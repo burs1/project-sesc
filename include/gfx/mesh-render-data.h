@@ -16,9 +16,13 @@ public:
     const Mesh*,
     window::Texture*);
 
+  ~MeshRenderData() = default;
+
+  // - Methods -
+  // ~ Getters
   auto GetVerts(int*)     const -> math::Vec3* override;
 
-  auto GetUVCoords(int*)  const -> math::Vec2* override;
+  auto GetUVCoords(int*)  const -> const math::Vec2* override;
 
   auto GetTriangles(int*) const -> const Triangle* override;
 

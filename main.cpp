@@ -1,6 +1,6 @@
+#include <SDL_scancode.h>
 #include <cmath>
 #include <string>
-#include <iostream>
 
 #include "math/matrix4x4.h"
 #include "math/vec3.h"
@@ -9,6 +9,7 @@
 #include "window/window.h"
 #include "gfx/renderer3d.h"
 #include "utils/funcs.h"
+#include "logger/logger.h"
 
 using namespace std;
 using namespace eng;
@@ -16,7 +17,7 @@ using namespace eng;
 class Ship : public gmpl::Entity {
 private:
   void OnCreate() override {
-    SetCameraTransform(&pos, &rot);
+    //SetCameraTransform(&pos, &rot);
   }
 
   void OnUpdate() override {
@@ -24,6 +25,7 @@ private:
 
     // Input
     int thrust_axis = IsKeyDown(SDL_SCANCODE_W) - IsKeyDown(SDL_SCANCODE_S);
+    int strafe_axis = IsKeyDown(SDL_SCANCODE_D) - IsKeyDown(SDL_SCANCODE_A);
 
     int tilt_axis   = IsKeyDown(SDL_SCANCODE_DOWN) - IsKeyDown(SDL_SCANCODE_UP);
     int yaw_axis    = IsKeyDown(SDL_SCANCODE_RIGHT) - IsKeyDown(SDL_SCANCODE_LEFT);
@@ -40,22 +42,20 @@ private:
     math::Matrix4x4 rotmat;
     rotmat.SetRotation(rot);
 
-    vel = math::Vec3::Lerp(
-      vel,
-      rotmat.Forward() * thrust_axis * max_thrust,
-      (thrust_axis != 0 ? acceleration_speed : decceleration_speed) * dt);
-
+    vel = rotmat.Forward() * math::Vec3(strafe_axis, 0.0f, thrust_axis) * max_thrust;
     pos += vel * dt;
+  }
 
-    // Camera
-    SetCameraFOV(70 + 10 * (vel.Magnitude() / max_thrust));
+  void OnDrawGUI() override {
+    DrawText(0, 0, std::to_string(rot.y).c_str());
+    DrawText(0, 75, std::to_string(pos.x).c_str());
   }
 
   float acceleration_speed = 1.0f;
   float decceleration_speed = 0.25f;
   float mobility = 0.5f;
 
-  float max_thrust = 5.0f;
+  float max_thrust = 15.0f;
   float max_tilt   = 2.0f;
   float max_yaw    = 2.0f;
   float max_roll   = 2.0f;
@@ -65,8 +65,6 @@ private:
   float roll   = 0.0f;
 
   math::Vec3 vel;
-
-  float shake_magnitude = 0.1f;
 };
 
 class Planet : public gmpl::Entity {
@@ -78,28 +76,28 @@ private:
 
 int main (int argc, char *argv[]) {
   // Init systems
-  sdl::Window::Init("starfighters", 1280, 720, false);
-  sdl::Window *window = sdl::Window::GetInstance();
+  window::Window::Create("starfighters", 1280, 720);
 
-  window->drawer->SetRenderLogicalSize(320, 180);
+  window::Window *window = window::Window::GetInstance();
+  window::Drawer *drawer = window::Drawer::GetInstance();
 
-  window->drawer->LoadSprite("assets/sprites/rock.png", "rock");
+  drawer->LoadTexture("assets/sprites/rock.png", "rock");
 
-  window->drawer->LoadFont("assets/fonts/superstar.ttf", "main", 16);
-  window->drawer->SetDrawFont("main");
+  drawer->LoadFont("assets/fonts/superstar.ttf", "main", 16);
+  drawer->SetDrawFont("main");
 
-  gfx::Renderer3D::Init();
+  gfx::Renderer3D::Create();
   gfx::Renderer3D *renderer3d = gfx::Renderer3D::GetInstance();
 
-  gmpl::Scene::Init();
+  gmpl::Scene::Create();
   gmpl::Scene *scene = gmpl::Scene::GetInstance();
 
   // Load assets
-  renderer3d->LoadMesh("assets/models/textured-cube.obj", "planet" ,"rock");
+  renderer3d->LoadMesh("assets/models/cube.obj", "planet");
 
   auto planet = scene->InstantiateEntity<Planet>("planet");
-  planet->pos = math::Vec3(0, 0, 20);
-  planet->rot = math::Vec3(0.2, 0.2, 0);
+  planet->pos = math::Vec3(0, 0, 100);
+
 
   scene->InstantiateEntity<Ship>();
 
@@ -108,7 +106,7 @@ int main (int argc, char *argv[]) {
   Uint32 lastUpdateTime = window->GetTicks();
   Uint32 nextUpdateTime = window->GetTicks();
 
-  while (not window->is_close_requested) {
+  while (not window->IsCloseRequested()) {
     // Hold update untill it's time
     Uint32 currentTime = window->GetTicks();
     if (currentTime < nextUpdateTime) { continue; }
@@ -116,15 +114,15 @@ int main (int argc, char *argv[]) {
     lastUpdateTime = currentTime;
     nextUpdateTime = currentTime - currentTime % updateDelay + updateDelay;
 
-    window->UpdateEvents();
+    window->PollEvents();
     scene->Update();
     window->UpdateSurface();
   }
 
   // Clean up
-  gmpl::Scene::Quit();
-  gfx::Renderer3D::Quit();
-  window::Window::Quit();
+  gmpl::Scene::Destroy();
+  gfx::Renderer3D::Destroy();
+  window::Window::Destroy();
 
   return 0;
 }

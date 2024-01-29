@@ -25,13 +25,9 @@ namespace eng::gfx {
     return arr;
   }
 
-  auto Mesh::GetUVCoords(int* uv_coords_count) const -> math::Vec2* {
-    math::Vec2* arr = new math::Vec2[uv_coords_count_];
-
+  auto Mesh::GetUVCoords(int* uv_coords_count) const -> const math::Vec2* {
     *uv_coords_count = uv_coords_count_;
-    std::copy(uv_coords_, uv_coords_ + uv_coords_count_, arr);
-    
-    return arr;
+    return uv_coords_;
   }
 
   auto Mesh::GetTriangles(int* triangles_count) const -> const Triangle* {

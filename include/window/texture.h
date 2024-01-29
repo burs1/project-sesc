@@ -1,22 +1,26 @@
 #pragma once
 
 #include <SDL.h>
-#include <SDL_render.h>
 
 namespace eng::window {
 
 class Texture {
 public:
+  // Constructor
   explicit Texture(SDL_Texture*);
 
+  // Extended constructor
   Texture(SDL_Texture*, SDL_Rect);
 
+  // Destructor
   ~Texture();
 
-  // ~ Getters
+  // - Methods -
+  // Assigns texture size in pixels to passed pointers.
   auto GetSize(int*, int*) const -> void;
 
-  auto GetTexture() const -> SDL_Texture*;
+  // Returns an SDL texture pointer.
+  auto GetTexture()        const -> SDL_Texture*;
 
 private:
   // Vars

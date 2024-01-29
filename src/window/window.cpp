@@ -1,37 +1,93 @@
+#include <iostream>
+#include <stdexcept>
+
+#include <SDL.h>
+
+#include "window/input.h"
+#include "window/audio.h"
+#include "window/drawer.h"
 #include "window/window.h"
 #include "window/drawer-sdl.h"
+#include "logger/logger.h"
 
 namespace eng::window {
 
 Window* Window::kInstance = nullptr;
 
-// Static methods
-auto Window::Init(const char* name, int width, int height, bool fullscreen) -> void {
+// - Static methods -
+auto Window::Create(const char* name, int width, int height) -> void {
   if (not kInstance) {
-    kInstance = new Window(name, width, height, fullscreen);
+    kInstance = new Window(name, width, height);
+    log::Info("Window instance created");
+    InitSubsytems();
     return;
   }
-  throw std::runtime_error("Window is already created.");
+
+  throw std::runtime_error("Trying to create a window when it is already open");
 }
+
 
 auto Window::GetInstance() -> Window* {
-  if (kInstance) {
-    return kInstance;
-  }
-  throw std::runtime_error("Window doesn't exist.");
+  if (kInstance) { return kInstance; }
+
+  throw std::runtime_error("Trying to get a window instance when it doesn't exist");
 }
 
-auto Window::Quit() -> void {
+
+auto Window::Destroy() -> void {
   if (kInstance) {
     delete kInstance;
+    log::Info("Window instance destroyed");
     return;
   }
-  throw std::runtime_error("Window doesn't exist.");
+
+  throw std::runtime_error("Trying to destroy a window when it doens't exist");
 }
 
-Window::Window (const char *title, int width, int height, bool fullscreen)
-  : is_fullscreen_(fullscreen), is_close_requested(is_close_requested_),
-  width_(width), height_(height), width(width_), height(height_) {
+
+// - Methods -
+auto Window::GetSDLWindowInstance() const -> SDL_Window* {
+  return sdl_window_;
+}
+
+
+auto Window::GetTicks() const -> Uint32 {
+  return SDL_GetTicks();
+}
+
+
+auto Window::GetSize(int* width, int* height) const -> void {
+  *width  = width_;
+  *height = height_;
+}
+
+
+auto Window::IsCloseRequested() const -> bool {
+  return is_close_requested_;
+}
+
+
+auto Window::PollEvents() -> void {
+  SDL_Event e;
+  while(SDL_PollEvent(&e)) {
+    if (e.type == SDL_QUIT) {
+      log::Info("Window close requested");
+      is_close_requested_ = true;
+    }
+  }
+
+  input_->Update();
+}
+
+
+auto Window::UpdateSurface() -> void {
+  drawer_->Present();
+}
+
+
+// Constructor
+Window::Window (const char *title, int width, int height)
+    : width_(width), height_(height) {
   // Init SDL
   if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
     throw std::runtime_error(SDL_GetError());
@@ -39,79 +95,41 @@ Window::Window (const char *title, int width, int height, bool fullscreen)
 
   // Create window
   sdl_window_ = SDL_CreateWindow(
-    title, 
-    SDL_WINDOWPOS_CENTERED, 
-    SDL_WINDOWPOS_CENTERED, 
-    width_, height_, 
-    is_fullscreen_ ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_SHOWN
+    title,
+    SDL_WINDOWPOS_CENTERED,
+    SDL_WINDOWPOS_CENTERED,
+    width_, height_,
+    SDL_WINDOW_SHOWN
   );
 
   if (sdl_window_ == NULL) {
     throw std::runtime_error(SDL_GetError());
   }
+}
 
-  // Init systems
-  Input::Init();
-  Audio::Init();
-  Drawer::Init<DrawerSDL>();
+// - Internal statis methods -
+auto Window::InitSubsytems() -> void {
+  Input::Create();
+  Audio::Create();
+  Drawer::Create<DrawerSDL>();
 
-  // Get system instances
-  input = Input::GetInstance();
-  audio = Audio::GetInstance();
-  drawer = Drawer::GetInstance();
+  Window* window = Window::GetInstance();
+  window->input_ = Input::GetInstance();
+  window->audio_ = Audio::GetInstance();
+  window->drawer_ = Drawer::GetInstance();
 }
 
 
+// Destructor
 Window::~Window() {
   // Destroy systems
-  Input::Quit();
-  Audio::Quit();
-  Drawer::Quit();
+  Input::Destroy();
+  Audio::Destroy();
+  Drawer::Destroy();
 
   SDL_DestroyWindow(sdl_window_);
 
   SDL_Quit();
-}
-
-
-// Methods
-// ~ Main
-auto Window::UpdateEvents() -> void {
-  SDL_Event e;
-  while(SDL_PollEvent(&e)) {
-    if (e.type == SDL_QUIT) {
-      is_close_requested_ = true;
-    }
-  }
-
-  input->Update();
-}
-
-
-auto Window::UpdateSurface() -> void {
-  drawer->Present();
-}
-
-
-// ~ Window
-auto Window::ToggleFullscreen() -> void {
-  is_fullscreen_ = !is_fullscreen_;
-  SDL_SetWindowFullscreen(sdl_window_, is_fullscreen_ ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_SHOWN);
-}
-
-
-auto Window::GetTicks() -> Uint32 {
-  return SDL_GetTicks();
-}
-
-
-auto Window::SetCursorLock(bool value) -> void {
-  is_cursor_locked_ = value;
-}
-
-
-auto Window::GetSDLWindowInstance() -> SDL_Window* {
-  return sdl_window_;
 }
 
 

@@ -6,7 +6,7 @@ namespace eng::gmpl {
 Scene* Scene::kInstance = nullptr;
 
 // Static methods
-auto Scene::Init() -> void {
+auto Scene::Create() -> void {
   if (not kInstance) {
     kInstance = new Scene();
     return;
@@ -23,7 +23,7 @@ auto Scene::GetInstance() -> Scene* {
 }
 
 
-auto Scene::Quit() -> void {
+auto Scene::Destroy() -> void {
   if (kInstance) {
     delete kInstance;
     return;
@@ -67,7 +67,7 @@ auto Scene::Update() -> void {
 
   // Draw GUI
   for (auto entity : entities_by_type_["all"]) {
-    entity->OnGUIDraw();
+    entity->OnDrawGUI();
   }
 }
 
