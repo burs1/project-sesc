@@ -7,11 +7,12 @@ TextureRenderData::TextureRenderData(
     const math::Vec3& pos,
     const math::Vec3& rot,
     const math::Vec3& scale,
+    bool ignore_lightning,
     window::Texture* texture) 
-    : RenderData(pos, rot, scale), texture_(texture) {
+    : RenderData(pos, rot, scale, ignore_lightning), texture_(texture) {
   triangles_ = new Triangle[]{
     Triangle{{0, 1, 2}, {0, 1, 2}, {255, 255, 255}},
-    Triangle{{1, 2, 3}, {1, 2, 3}, {255, 255, 255}}
+    Triangle{{0, 2, 3}, {0, 2, 3}, {255, 255, 255}}
   };
 
   uv_coords_ = new math::Vec2[] {
@@ -24,6 +25,7 @@ TextureRenderData::TextureRenderData(
 
 
 TextureRenderData::~TextureRenderData() {
+  delete texture_;
   delete [] triangles_;
   delete [] uv_coords_;
 }
@@ -38,10 +40,10 @@ auto TextureRenderData::GetVerts(int* verts_count) const -> math::Vec3* {
   texture_->GetSize(&width, &height);
 
   math::Vec3* arr = new math::Vec3[]{
-    math::Vec3(-width / 2.0f, -height / 2.0f, 0.0f),
-    math::Vec3(width / 2.0f, -height / 2.0f, 0.0f),
-    math::Vec3(width / 2.0f, height / 2.0f, 0.0f),
     math::Vec3(-width / 2.0f, height / 2.0f, 0.0f),
+    math::Vec3(width / 2.0f, height / 2.0f, 0.0f),
+    math::Vec3(width / 2.0f, -height / 2.0f, 0.0f),
+    math::Vec3(-width / 2.0f, -height / 2.0f, 0.0f),
   };
 
   return arr;

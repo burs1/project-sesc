@@ -7,9 +7,10 @@ MeshRenderData::MeshRenderData(
     const math::Vec3& pos,
     const math::Vec3& rot,
     const math::Vec3& scale,
+    bool ignore_lightning,
     const Mesh* mesh,
     window::Texture* texture)
-    : RenderData(pos, rot, scale), mesh_(mesh) {}
+    : RenderData(pos, rot, scale, ignore_lightning), mesh_(mesh), texture_(texture) {}
 
 
 auto MeshRenderData::GetVerts(int* verts_count) const -> math::Vec3* {

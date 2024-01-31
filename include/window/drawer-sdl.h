@@ -65,16 +65,18 @@ public:
     float, float, float,
     int halign=0, int valign=0) -> void override;
 
-  auto DrawText(int, int, const char*, float, float) -> void override;
+  auto DrawText(int, int, const std::string&,
+      float, float) -> void override;
 
   auto DrawTextEx(
     int, int,
-    const char*,
+    const std::string&,
     float, float, float, 
     int halign=0, int valign=0) -> void override;
 
   // Rendering
-  auto RenderText(const char*, const char* font="") -> Texture* override;
+  auto RenderText(const std::string&,
+                  const char* font="") -> Texture* override;
 
 private:
   DrawerSDL();

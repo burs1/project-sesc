@@ -35,13 +35,15 @@ public:
   // Updates window surface showing the rendered frame.
   virtual auto Present()                               -> void = 0;
 
-  // Load the file into a Texture object and inserts it in map by given name.
+  // Load the file into a Texture object and inserts it in map
+  // by given name.
   virtual auto LoadTexture(const char*, const char*)   -> void = 0;
 
   // Unload the Texture object by it's name.
   virtual auto UnloadTexture(const char*)              -> void = 0;
 
-  // Load the file into a Font object and inserts it in map by given name.
+  // Load the file into a Font object and inserts it in map
+  // by given name.
   virtual auto LoadFont(const char*, const char*, int) -> void = 0;
 
   // Unload the Font object by it's name.
@@ -113,7 +115,8 @@ public:
 
   // Draws a rendered text Texture object at the given
   // point with the given scale.
-  virtual auto DrawText(int, int, const char*, float, float) -> void = 0;
+  virtual auto DrawText(int, int, const std::string&,
+                        float, float) -> void = 0;
 
   // Draw a rendered text Texture object at the given
   // point with the given scale rotated by specified angle.
@@ -121,14 +124,15 @@ public:
   // Vertical align can be set with 0 (up), 1 (middle) or 2 (down).
   virtual auto DrawTextEx(
     int, int,
-    const char*,
+    const std::string&,
     float, float, float, 
     int halign=0, int valign=0) -> void = 0;
 
   // Returns Texture object that contains texture of rendered text.
   // If font wasn't specified the text will be rendered using current
   // style draw font.
-  virtual auto RenderText(const char*, const char* font="") -> Texture* = 0;
+  virtual auto RenderText(const std::string&,
+                          const char* font="") -> Texture* = 0;
 
 protected:
   Drawer() = default;

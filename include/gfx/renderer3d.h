@@ -54,20 +54,22 @@ public:
     const math::Vec3&,
     const math::Vec3&,
     const math::Vec3&,
+    bool,
     const char*) -> void;
 
   auto AddTextureToQueue(
     const math::Vec3&,
     const math::Vec3&,
     const math::Vec3&,
+    bool,
     const char*) -> void;
 
   auto AddTextToQueue(
     const math::Vec3&,
     const math::Vec3&,
     const math::Vec3&,
-    const char*,
-    const char* font="") -> void;
+    bool,
+    const char*) -> void;
 
   auto RenderQueue() -> void;
 
@@ -124,7 +126,6 @@ private:
   float fov_ = 0.0f, near_ = 0.0f, far_ = 0.0f;
 
   std::map<const char*, Mesh*> meshes_;
-  std::map<const char*, window::Texture*> rendered_text_;
 
   std::vector<RenderData*> render_queue_;
   math::Matrix4x4 projmat_;

@@ -62,12 +62,7 @@ Renderer3D::~Renderer3D() {
     delete mesh;
   }
 
-  // Uload all contained rendered text textures
-  for (auto [name, texture] : rendered_text_) {
-    delete texture;
-  }
-
-  // Maps and vector frees automaticly
+  // Maps and vectors frees automaticly
 }
 
 
@@ -152,11 +147,12 @@ auto Renderer3D::AddMeshToQueue(
     const math::Vec3& pos,
     const math::Vec3& rot,
     const math::Vec3& scale,
+    bool ignore_lightning,
     const char* mesh_name) -> void {
   Mesh* mesh = meshes_[mesh_name];
   render_queue_.push_back(
     new MeshRenderData(
-      pos, rot, scale, mesh,
+      pos, rot, scale, ignore_lightning, mesh,
       drawer_->GetTexture( mesh->GetTextureName() )
     ));
 }
@@ -166,10 +162,11 @@ auto Renderer3D::AddTextureToQueue(
     const math::Vec3& pos,
     const math::Vec3& rot,
     const math::Vec3& scale,
+    bool ignore_lightning,
     const char* texture_name) -> void {
   render_queue_.push_back(
     new TextureRenderData(
-      pos, rot, scale,
+      pos, rot, scale, ignore_lightning,
       drawer_->GetTexture(texture_name)
     ));
 }
@@ -179,16 +176,14 @@ auto Renderer3D::AddTextToQueue(
     const math::Vec3& pos,
     const math::Vec3& rot,
     const math::Vec3& scale,
-    const char* text,
-    const char* font) -> void {
+    bool ignore_lightning,
+    const char* text) -> void {
 
   window::Texture* text_texture;
-  rendered_text_[text] = drawer_->RenderText(text, font);
-
   render_queue_.push_back(
     new TextureRenderData(
-      pos, rot, scale,
-      text_texture
+      pos, rot, scale, ignore_lightning,
+      drawer_->RenderText(text)
     ));
 }
 
@@ -215,12 +210,6 @@ auto Renderer3D::RenderQueue() -> void {
     delete render_data;
   }
   render_queue_.clear();
-
-  // Destroy all rendered text
-  for (auto& [name, texture] : rendered_text_) {
-    delete texture;
-  }
-  rendered_text_.clear();
 }
 
 // Internal methods
@@ -231,12 +220,14 @@ auto Renderer3D::CalcViewMatrix() -> void {
   viewmat_.LookAt(math::Vec3(0, 0, 0), math::Vec3(0, 0, 1), math::Vec3(0, 1, 0));
 
   if (not camera_.rot) {
+    log::Warn("Renderer3D: using default cam rotation");
     math::Vec3 default_rot(0.0f, 0.0f, 0.0f);
     rotmat.SetRotation(default_rot);
   }
   else { rotmat.SetRotation(*camera_.rot); }
 
   if (not camera_.pos) {
+    log::Warn("Renderer3D: using default cam position");
     math::Vec3 default_pos(0.0f, 0.0f, 0.0f);
     viewmat_.LookAt(
       default_pos,
@@ -309,11 +300,14 @@ auto Renderer3D::ProcessTriangles(
     }
 
     // Calc light
-    normal = math::Vec3::Cross(
-        transformed_verts[ verts_ids[1] ] - transformed_verts[ verts_ids[0] ],
-        transformed_verts[ verts_ids[2] ] - transformed_verts[ verts_ids[0] ]);
-    normal.Normalize();
-    float lightk = (1 + math::Vec3::Dot(normal, sun_direction_)) / 2;
+    float lightk = 1.0f;
+    if (not render_data->IsLightIgnored()) {
+      normal = math::Vec3::Cross(
+          transformed_verts[ verts_ids[1] ] - transformed_verts[ verts_ids[0] ],
+          transformed_verts[ verts_ids[2] ] - transformed_verts[ verts_ids[0] ]);
+      normal.Normalize();
+      lightk = (1 + math::Vec3::Dot(normal, sun_direction_)) / 2;
+    }
 
     triangles_to_draw.push_back(
       RawTriangle{

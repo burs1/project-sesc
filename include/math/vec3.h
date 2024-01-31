@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cmath>
+#include <string>
 
 #include "math/matrix4x4.h"
 
@@ -73,3 +73,10 @@ namespace eng::math {
     float x, y, z;
   };
 }
+
+namespace std {
+
+string to_string(const eng::math::Vec3&);
+
+}
+

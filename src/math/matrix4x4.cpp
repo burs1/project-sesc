@@ -1,3 +1,4 @@
+#include <cmath>
 #include "math/matrix4x4.h"
 
 namespace eng::math {
@@ -23,6 +24,7 @@ auto Matrix4x4::SetIdentity() -> void {
 
 
 auto Matrix4x4::SetTranslation(const Vec3& v) -> void {
+  SetIdentity();
   m[0][0] = 1.0f;
   m[1][1] = 1.0f;
   m[2][2] = 1.0f;
@@ -94,10 +96,10 @@ auto Matrix4x4::SetTransform(
   Matrix4x4 mat;
   SetScale(scale);
 
-  mat.SetRotation(pos);
+  mat.SetRotation(rot);
   *this *= mat;
 
-  mat.SetTranslation(scale);
+  mat.SetTranslation(pos);
   *this *= mat;
 }
 
@@ -118,8 +120,8 @@ auto Matrix4x4::Forward() const -> Vec3 {
 
 
 auto Matrix4x4::SetPerspective(float fov, float aspratio, float near, float far) -> void {
-  float fovrad = 1.0f / tanf( (fov / 2) * (3.14159f / 180) );
-	m[0][0] = aspratio * fovrad;
+  float fovrad = 1 / tanf( (fov / 2) * (3.14159f / 180) );
+	m[0][0] = fovrad / aspratio;
 	m[1][1] = fovrad;
 	m[2][2] = far / (far - near);
 	m[2][3] = 1.0f;

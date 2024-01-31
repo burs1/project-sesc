@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "math/vec3.h"
 
 namespace eng::math {
@@ -162,3 +164,12 @@ auto Vec3::operator<=(const Vec3 &other) const -> bool {
 }
 
 }
+
+namespace std {
+
+string to_string(const eng::math::Vec3& v) {
+  return '(' + to_string(v.x) + "; " + to_string(v.y) + "; " + to_string(v.z) + ')';
+}
+
+}
+

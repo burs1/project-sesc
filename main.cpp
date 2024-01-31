@@ -14,57 +14,66 @@
 using namespace std;
 using namespace eng;
 
-class Ship : public gmpl::Entity {
+class FreeCamera : public gmpl::Entity {
 private:
   void OnCreate() override {
-    //SetCameraTransform(&pos, &rot);
+    SetCameraTransform(&pos, &rot);
   }
 
   void OnUpdate() override {
     float dt = GetDeltaTime();
 
     // Input
-    int thrust_axis = IsKeyDown(SDL_SCANCODE_W) - IsKeyDown(SDL_SCANCODE_S);
-    int strafe_axis = IsKeyDown(SDL_SCANCODE_D) - IsKeyDown(SDL_SCANCODE_A);
+    int forward_axis = IsKeyDown(SDL_SCANCODE_W) - IsKeyDown(SDL_SCANCODE_S);
+    int right_axis = IsKeyDown(SDL_SCANCODE_D) - IsKeyDown(SDL_SCANCODE_A);
+    int up_axis = IsKeyDown(SDL_SCANCODE_SPACE) - IsKeyDown(SDL_SCANCODE_LCTRL);
 
     int tilt_axis   = IsKeyDown(SDL_SCANCODE_DOWN) - IsKeyDown(SDL_SCANCODE_UP);
     int yaw_axis    = IsKeyDown(SDL_SCANCODE_RIGHT) - IsKeyDown(SDL_SCANCODE_LEFT);
     int roll_axis   = IsKeyDown(SDL_SCANCODE_Q) - IsKeyDown(SDL_SCANCODE_E);
 
-    // Rotate
-    tilt = std::lerp(tilt, tilt_axis * max_tilt, mobility * dt);
-    yaw = std::lerp(yaw, yaw_axis * max_yaw, mobility * dt);
-    roll = std::lerp(roll, roll_axis * max_roll, mobility * dt);
+    int speed_up_key = IsKeyDown(SDL_SCANCODE_LSHIFT);
 
-    rot += math::Vec3(tilt, yaw, roll) * dt;
+    // Rotate
+    auto rot_delta = math::Vec3(tilt_axis, yaw_axis, roll_axis);
+    rot += rot_delta * rotation_speed_ * dt;
 
     // Move
     math::Matrix4x4 rotmat;
     rotmat.SetRotation(rot);
 
-    vel = rotmat.Forward() * math::Vec3(strafe_axis, 0.0f, thrust_axis) * max_thrust;
-    pos += vel * dt;
+    auto move_delta = math::Vec3(right_axis, 0.0f, forward_axis) * rotmat;
+    move_delta += math::Vec3(0.0f, up_axis, 0.0f);
+    pos += (move_delta * move_speed_) * (speed_up_key ? 10.0f : 1.0f) * dt;
+  }
+
+  void OnDraw() override {
+    DrawText3D(
+      math::Vec3(0.0f, 10.0f, 50.0f),
+      math::Vec3(0.0f, 0.0f, 0.0f),
+      math::Vec3(1.0f, 1.0f, 1.0f),
+      "Hello world!",
+      true);
+
+    DrawTexture3D(
+      math::Vec3(0.0f, 50.0f, 50.0f),
+      math::Vec3(0.0f, 0.0f, 0.0f),
+      math::Vec3(1.0f, 1.0f, 1.0f),
+      "rock",
+      true);
   }
 
   void OnDrawGUI() override {
-    DrawText(0, 0, std::to_string(rot.y).c_str());
-    DrawText(0, 75, std::to_string(pos.x).c_str());
+    // Draw pos and rot
+    SetDrawColor(255, 255, 255);
+    DrawText(0, 660, "rotation: " + std::to_string(rot), 2.0f, 2.0f);
+    DrawText(0, 690, "position: " + std::to_string(pos), 2.0f, 2.0f);
   }
 
-  float acceleration_speed = 1.0f;
-  float decceleration_speed = 0.25f;
-  float mobility = 0.5f;
+  float rotation_speed_ = 3.0f;
+  float move_speed_     = 3.0f;
 
-  float max_thrust = 15.0f;
-  float max_tilt   = 2.0f;
-  float max_yaw    = 2.0f;
-  float max_roll   = 2.0f;
-
-  float tilt   = 0.0f;
-  float yaw    = 0.0f;
-  float roll   = 0.0f;
-
-  math::Vec3 vel;
+  float axis_line_length_ = 50.0f;
 };
 
 class Planet : public gmpl::Entity {
@@ -93,13 +102,13 @@ int main (int argc, char *argv[]) {
   gmpl::Scene *scene = gmpl::Scene::GetInstance();
 
   // Load assets
-  renderer3d->LoadMesh("assets/models/cube.obj", "planet");
+  renderer3d->LoadMesh("assets/models/textured-cube.obj", "cube", "rock");
 
-  auto planet = scene->InstantiateEntity<Planet>("planet");
-  planet->pos = math::Vec3(0, 0, 100);
+  auto planet = scene->InstantiateEntity<Planet>("cube");
+  planet->pos = math::Vec3(0, 0, 20);
 
 
-  scene->InstantiateEntity<Ship>();
+  scene->InstantiateEntity<FreeCamera>();
 
   // Delta time 
   int updateDelay = 16; //16 ticks ~ 61 fps

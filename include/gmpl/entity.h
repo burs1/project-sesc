@@ -125,7 +125,7 @@ protected:
 
   inline auto DrawText(
       int x, int y,
-      const char* text,
+      const std::string& text,
       float xscale=1, float yscale=1) -> void {
     drawer->DrawText(x, y, text, xscale,yscale);
   }
@@ -133,7 +133,7 @@ protected:
 
   inline auto DrawTextEx(
       int x, int y,
-      const char* text,
+      const std::string& text,
       float xscale, float yscale, float angle, 
       int h_align=0, int v_align=0) -> void {
     drawer->DrawTextEx(
@@ -170,8 +170,9 @@ protected:
       const math::Vec3& pos,
       const math::Vec3& rot,
       const math::Vec3& scale,
-      const char* mesh_name) -> void {
-    renderer3d->AddMeshToQueue(pos, rot, scale, mesh_name);
+      const char* mesh_name,
+      bool ignore_lightning=false) -> void {
+    renderer3d->AddMeshToQueue(pos, rot, scale, ignore_lightning, mesh_name);
   }
 
 
@@ -179,8 +180,9 @@ protected:
       const math::Vec3& pos,
       const math::Vec3& rot,
       const math::Vec3& scale,
-      const char* texture_name) -> void {
-    renderer3d->AddTextureToQueue(pos, rot, scale, texture_name);
+      const char* texture_name,
+      bool ignore_lightning=true) -> void {
+    renderer3d->AddTextureToQueue(pos, rot, scale, ignore_lightning, texture_name);
   }
 
   
@@ -189,8 +191,8 @@ protected:
       const math::Vec3& rot,
       const math::Vec3& scale,
       const char* text,
-      const char* font="") -> void {
-    renderer3d->AddTextToQueue(pos, rot, scale, text, font);
+      bool ignore_lightning=true) -> void {
+    renderer3d->AddTextToQueue(pos, rot, scale, ignore_lightning, text);
   }
 
 

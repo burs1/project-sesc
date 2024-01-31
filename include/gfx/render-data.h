@@ -12,7 +12,8 @@ public:
   RenderData(
     const math::Vec3&,
     const math::Vec3&,
-    const math::Vec3&);
+    const math::Vec3&,
+    bool);
 
   virtual ~RenderData() = default;
 
@@ -32,10 +33,15 @@ public:
   // Shouldn't be deleted by user!
   virtual auto GetTriangles(int*) const -> const Triangle* = 0;
 
+  // Returns a pointer to texture.
   virtual auto GetTexture()       const -> window::Texture* = 0;
+
+  // Returns value of "ignore_lightning_".
+  auto IsLightIgnored()           const -> bool;
 
 private:
   math::Vec3 pos_, rot_, scale_;
+  bool ignore_lightning_;
 
 };
 

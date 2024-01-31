@@ -125,7 +125,7 @@ auto DrawerSDL::GetResolution(int* width, int* height) -> void {
 auto DrawerSDL::GetAspectRatio() -> float {
   int width, height;
   SDL_GetWindowSize(sdl_window_, &width, &height);
-  return (float)height / width;
+  return (float)width / height;
 }
 
 
@@ -144,7 +144,10 @@ auto DrawerSDL::DrawLine(int x1, int y1, int x2, int y2) -> void {
 }
 
 
-auto DrawerSDL::DrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, bool fill) -> void {
+auto DrawerSDL::DrawTriangle(
+    int x1, int y1,
+    int x2, int y2,
+    int x3, int y3, bool fill) -> void {
   if (fill) {
   SDL_Vertex verts[] = {
       {{(float)x1, (float)y1}, draw_color_},
@@ -161,23 +164,24 @@ auto DrawerSDL::DrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, boo
 }
 
 
-auto DrawerSDL::DrawTriangleTextured(int x1, int y1,
-                                     int x2, int y2,
-                                     int x3, int y3,
-                                     float u1, float v1,
-                                     float u2, float v2,
-                                     float u3, float v3,
-                                     Texture* texture) -> void {
+auto DrawerSDL::DrawTriangleTextured(
+    int x1, int y1,
+    int x2, int y2,
+    int x3, int y3,
+    float u1, float v1,
+    float u2, float v2,
+    float u3, float v3,
+    Texture* texture) -> void {
   SDL_Vertex verts[] = {
       {{(float)x1, (float)y1}, draw_color_, {u1, v1}},
       {{(float)x2, (float)y2}, draw_color_, {u2, v2}},
       {{(float)x3, (float)y3}, draw_color_, {u3, v3}}
     };
-    SDL_RenderGeometry(
-      sdl_renderer_,
-      texture->GetTexture(),
-      verts,
-      3, NULL, 0);
+  SDL_RenderGeometry(
+    sdl_renderer_,
+    texture->GetTexture(),
+    verts,
+    3, NULL, 0);
 }
 
 
@@ -240,11 +244,11 @@ auto DrawerSDL::DrawTextureEx(
 
 auto DrawerSDL::DrawText(
     int x, int y,
-    const char* text,
+    const std::string& text,
     float xscale, float yscale) -> void {
   SDL_Rect dsrect{0, 0};
 
-  SDL_Texture *texture = RenderTextSDL(text, draw_font_, &dsrect);
+  SDL_Texture *texture = RenderTextSDL(text.c_str(), draw_font_, &dsrect);
 
   SDL_Rect srcrect{
     x, y,
@@ -259,12 +263,12 @@ auto DrawerSDL::DrawText(
 
 auto DrawerSDL::DrawTextEx(
     int x, int y,
-    const char* text,
+    const std::string& text,
     float xscale, float yscale, float angle, 
     int h_align, int v_align) -> void {
   SDL_Rect dsrect{0, 0};
 
-  SDL_Texture *texture = RenderTextSDL(text, draw_font_, &dsrect);
+  SDL_Texture *texture = RenderTextSDL(text.c_str(), draw_font_, &dsrect);
 
   SDL_Rect srcrect{
     x, y,
@@ -285,9 +289,14 @@ auto DrawerSDL::DrawTextEx(
 
 
 // ~ Render
-auto DrawerSDL::RenderText(const char* text, const char* font) -> Texture* {
+auto DrawerSDL::RenderText(
+    const std::string& text,
+    const char* font) -> Texture* {
   SDL_Rect rect;
-  SDL_Texture* texture = RenderTextSDL(text, (font[0] == '\0' ? draw_font_ : font), &rect);
+  SDL_Texture* texture = RenderTextSDL(
+                          text.c_str(),
+                          (font[0] == '\0' ? draw_font_ : font),
+                          &rect);
   return new Texture(texture, rect);
 }
 

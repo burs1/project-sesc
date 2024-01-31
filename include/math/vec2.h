@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cmath>
+#include <string>
 
 namespace eng::math {
   class Vec2 {
@@ -66,3 +66,10 @@ namespace eng::math {
     float x, y;
   };
 }
+
+namespace std {
+
+string to_string(const eng::math::Vec2&);
+
+}
+

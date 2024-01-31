@@ -13,6 +13,7 @@ public:
     const math::Vec3&,
     const math::Vec3&,
     const math::Vec3&,
+    bool,
     window::Texture*);
 
   ~TextureRenderData() override;
