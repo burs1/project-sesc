@@ -128,6 +128,7 @@ private:
   std::map<const char*, Mesh*> meshes_;
 
   std::vector<RenderData*> render_queue_;
+  std::vector<window::Texture*> rendered_text_;
   math::Matrix4x4 projmat_;
   math::Matrix4x4 viewmat_;
 

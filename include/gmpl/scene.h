@@ -2,8 +2,6 @@
 
 #include <map>
 #include <vector>
-#include <string>
-#include <stdexcept>
 
 #include "window/window.h"
 #include "gfx/renderer3d.h"

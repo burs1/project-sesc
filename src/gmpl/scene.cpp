@@ -1,3 +1,7 @@
+#include <map>
+#include <vector>
+#include <stdexcept>
+
 #include "gmpl/scene.h"
 #include "gmpl/entity.h"
 

@@ -25,7 +25,6 @@ TextureRenderData::TextureRenderData(
 
 
 TextureRenderData::~TextureRenderData() {
-  delete texture_;
   delete [] triangles_;
   delete [] uv_coords_;
 }

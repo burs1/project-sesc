@@ -56,7 +56,7 @@ private:
       true);
 
     DrawTexture3D(
-      math::Vec3(0.0f, 50.0f, 50.0f),
+      math::Vec3(0.0f, 50.0f, 100.0f),
       math::Vec3(0.0f, 0.0f, 0.0f),
       math::Vec3(1.0f, 1.0f, 1.0f),
       "rock",

@@ -146,20 +146,20 @@ protected:
 
   inline auto DrawTexture(
       int x, int y,
-      const char* name,
+      const char* texture_name,
       float xscale, float yscale) -> void {
-    drawer->DrawTexture(x, y, name, xscale, yscale);
+    drawer->DrawTexture(x, y, texture_name, xscale, yscale);
   }
 
 
   inline auto DrawTextureEx(
       int x, int y,
-      const char* name,
+      const char* texture_name,
       float xscale, float yscale, float angle,
       int h_align=0, int v_align=0) -> void {
     drawer->DrawTextureEx(
       x, y,
-      name,
+      texture_name,
       xscale, yscale, angle,
       h_align, v_align);
   }

@@ -179,11 +179,13 @@ auto Renderer3D::AddTextToQueue(
     bool ignore_lightning,
     const char* text) -> void {
 
-  window::Texture* text_texture;
+  window::Texture* text_texture = drawer_->RenderText(text);
+  rendered_text_.push_back(text_texture);
+
   render_queue_.push_back(
     new TextureRenderData(
       pos, rot, scale, ignore_lightning,
-      drawer_->RenderText(text)
+      text_texture
     ));
 }
 
@@ -210,6 +212,11 @@ auto Renderer3D::RenderQueue() -> void {
     delete render_data;
   }
   render_queue_.clear();
+
+  for (auto texture : rendered_text_) {
+    delete texture;
+  }
+  rendered_text_.clear();
 }
 
 // Internal methods
