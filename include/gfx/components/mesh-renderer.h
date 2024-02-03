@@ -1,26 +1,19 @@
 #pragma once
 
 #include "gfx/mesh.h"
-#include "gfx/render-data.h"
+#include "gfx/components/renderer.h"
 #include "math/vec3.h"
 #include "math/vec2.h"
 
 namespace eng::gfx {
 
-class MeshRenderData : public RenderData {
+class MeshRenderer : public Renderer {
 public:
-  MeshRenderData(
-    const math::Vec3&,
-    const math::Vec3&,
-    const math::Vec3&,
-    bool,
-    const Mesh*,
-    window::Texture*);
-
-  ~MeshRenderData() = default;
-
   // - Methods -
-  // ~ Getters
+  auto SetTexture(window::Texture*) -> void;
+
+  auto SetMesh(gfx::Mesh*)          -> void;
+
   auto GetVerts(int*)     const -> math::Vec3* override;
 
   auto GetUVCoords(int*)  const -> const math::Vec2* override;
@@ -28,6 +21,7 @@ public:
   auto GetTriangles(int*) const -> const Triangle* override;
 
   auto GetTexture()       const -> window::Texture* override;
+
 
 private:
   const Mesh* mesh_ = nullptr;

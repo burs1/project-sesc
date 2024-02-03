@@ -1,10 +1,11 @@
+#include <SDL.h>
+
 #include "window/drawer-sdl.h"
-#include "window/window.h"
 
 namespace eng::window {
 
-DrawerSDL::DrawerSDL()
-    : sdl_window_(Window::GetInstance()->GetSDLWindowInstance()) {
+DrawerSDL::DrawerSDL(SDL_Window* sdl_window)
+    : sdl_window_(sdl_window) {
   // Initialize SDL_ttf
   if (TTF_Init() < 0) {
     throw std::runtime_error(TTF_GetError());

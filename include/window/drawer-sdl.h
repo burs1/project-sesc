@@ -1,52 +1,79 @@
 #include <map>
 
+#include <SDL.h>
+
 #include "window/drawer.h"
 #include "window/texture.h"
 
 namespace eng::window {
 
+class Window; // forward declaration to make "Window"
+              // a friend class of DrawerSDL, so nobody else
+              // couldn't instantiate it.
+
 class DrawerSDL : public Drawer {
-friend Drawer;
+friend Window;
 public:
-  // Methods
-  // ~ Main
-  auto Present()                               -> void override;
+  virtual auto Present()                               -> void override;
 
-  // ~ Resources
-  auto LoadTexture(const char*, const char*)   -> void override;
 
-  auto UnloadTexture(const char*)              -> void override;
+  virtual auto LoadTexture(const char*, const char*)   -> void override;
 
-  auto LoadFont(const char*, const char*, int) -> void override;
 
-  auto UnloadFont(const char*)                 -> void override;
+  virtual auto UnloadTexture(const char*)              -> void override;
 
-  // ~ Setters
-  auto SetClearColor(Uint8, Uint8, Uint8)      -> void override;
 
-  auto SetDrawColor(Uint8, Uint8, Uint8)       -> void override;
+  virtual auto LoadFont(const char*, const char*, int) -> void override;
 
-  auto SetDrawFont(const char*)                -> void override;
 
-  // ~ Getters
-  auto GetResolution(int*, int*)               -> void override;
+  virtual auto UnloadFont(const char*)                 -> void override;
 
-  auto GetAspectRatio()                        -> float override;
 
-  auto GetTexture(const char*)                 -> Texture* override;
+  virtual auto SetClearColor(Uint8, Uint8, Uint8)      -> void override;
 
-  // ~ Draw
-  auto DrawPoint(int, int)                     -> void override;
 
-  auto DrawLine(int, int, int, int)            -> void override;
+  virtual auto SetDrawColor(Uint8, Uint8, Uint8)       -> void override;
 
-  auto DrawTriangle(
+
+  virtual auto SetDrawFont(const char*)                -> void override;
+
+
+  virtual auto GetResolution(int*, int*)               -> void override;
+
+
+  virtual auto GetAspectRatio()                        -> float override;
+
+
+  virtual auto GetTexture(const char*)                 -> Texture* override;
+
+
+  virtual auto DrawPoint(int, int)                     -> void override;
+
+
+  virtual auto DrawPointN(float, float)                -> void override {}
+
+
+  virtual auto DrawLine(int, int, int, int)            -> void override;
+
+
+  virtual auto DrawLineN(float, float, float, float)   -> void override {}
+
+
+  virtual auto DrawTriangle(
     int, int, 
     int, int,
     int, int,
     bool fill=true) -> void override;
 
-  auto DrawTriangleTextured(
+
+  virtual auto DrawTriangleN(
+    float, float, 
+    float, float,
+    float, float,
+    bool fill=true) -> void override {}
+
+
+  virtual auto DrawTriangleTextured(
     int, int,
     int, int,
     int, int,
@@ -55,36 +82,79 @@ public:
     float, float,
     Texture*) -> void override;
 
-  auto DrawRect(int, int, int, int, bool fill=true)     -> void override;
 
-  auto DrawTexture(int, int, const char*, float, float) -> void override;
+  virtual auto DrawTriangleTexturedN(
+    float, float,
+    float, float,
+    float, float,
+    float, float,
+    float, float,
+    float, float,
+    Texture*) -> void override {}
+
+
+  virtual auto DrawRect(int, int, int, int, bool fill=true) -> void override;
+
+
+  virtual auto DrawRectN(float, float,
+                         int, int, bool fill=true) -> void override {}
+
+
+  virtual auto DrawTexture(int, int, const char*, float, float) -> void override;
+
+
+  virtual auto DrawTextureN(float, float,
+                            const char*, float, float) -> void override {}
+
   
-  auto DrawTextureEx(
+  virtual auto DrawTextureEx(
     int, int,
     const char*,
     float, float, float,
     int halign=0, int valign=0) -> void override;
 
-  auto DrawText(int, int, const std::string&,
-      float, float) -> void override;
 
-  auto DrawTextEx(
+  virtual auto DrawTextureExN(
+    float, float,
+    const char*,
+    float, float, float,
+    int halign=0, int valign=0) -> void override {}
+
+
+  virtual auto DrawText(int, int, const std::string&, 
+                        float, float) -> void override;
+
+
+  virtual auto DrawTextN(float, float, const std::string&, 
+                         float, float) -> void override {}
+
+
+  virtual auto DrawTextEx(
     int, int,
     const std::string&,
-    float, float, float, 
+    float, float, float,
     int halign=0, int valign=0) -> void override;
 
-  // Rendering
-  auto RenderText(const std::string&,
-                  const char* font="") -> Texture* override;
+
+  virtual auto DrawTextExN(
+    float, float,
+    const std::string&,
+    float, float, float,
+    int halign=0, int valign=0) -> void override {}
+
+
+  virtual auto RenderText(const std::string&,
+                          const char* font="") -> Texture* override;
 
 private:
-  DrawerSDL();
+  // Constructor
+  DrawerSDL(SDL_Window*);
 
+  // Destructor
   ~DrawerSDL();
 
-  // Internal methods
-  // ~ Draw
+  // - Initial methods -
+  // Uses SDL functionality to render text Texture object.
   auto RenderTextSDL(const char*, const char*, SDL_Rect*) -> SDL_Texture*;
 
   // Vars

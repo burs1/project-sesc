@@ -4,23 +4,25 @@
 #include <vector>
 
 #include "gfx/mesh.h"
-#include "gfx/render-data.h"
+#include "gfx/components/renderer.h"
 #include "gfx/raw-triangle.h"
 #include "window/drawer.h"
 #include "math/vec3.h"
 #include "math/matrix4x4.h"
 
+namespace eng::app {
+
+class App; // forward declaration to make "App"
+           // a friend class of Renderer3D, so nobody else
+           // couldn't instantiate it.
+
+}
+
 namespace eng::gfx {
 
 class Renderer3D {
+friend app::App;
 public:
-  // - Static methods -
-  static auto Create()      -> void;
-
-  static auto GetInstance() -> Renderer3D*;
-
-  static auto Destroy()     -> void;
-
   // ! Not copyable
   Renderer3D(const Renderer3D&) = delete;
 
@@ -32,7 +34,7 @@ public:
   Renderer3D& operator=(Renderer3D&&) = delete;
 
   // - Methods -
-  auto LoadMesh(const char*, const char*, const char* texture_name="") -> void;
+  auto LoadMesh(const char*, const char*) -> void;
 
   auto UnloadMesh(const char*)                                         -> void;
 
@@ -50,32 +52,11 @@ public:
 
   auto SetSunRotation(const math::Vec3&)                        -> void;
 
-  auto AddMeshToQueue(
-    const math::Vec3&,
-    const math::Vec3&,
-    const math::Vec3&,
-    bool,
-    const char*) -> void;
-
-  auto AddTextureToQueue(
-    const math::Vec3&,
-    const math::Vec3&,
-    const math::Vec3&,
-    bool,
-    const char*) -> void;
-
-  auto AddTextToQueue(
-    const math::Vec3&,
-    const math::Vec3&,
-    const math::Vec3&,
-    bool,
-    const char*) -> void;
-
-  auto RenderQueue() -> void;
+  auto RenderFrame() -> void;
 
 private:
   // Constructor
-  Renderer3D();
+  Renderer3D(window::Drawer*);
 
   // Destructor
   ~Renderer3D();
@@ -89,7 +70,7 @@ private:
     const math::Vec3&) -> math::Matrix4x4;
   
   auto ProcessTriangles(
-    const RenderData*,
+    const Renderer*,
     std::vector<RawTriangle>&) -> void;
 
   auto SortTriangles(std::vector<RawTriangle>&) -> void;
@@ -127,7 +108,7 @@ private:
 
   std::map<const char*, Mesh*> meshes_;
 
-  std::vector<RenderData*> render_queue_;
+  std::vector<Renderer*> renderer_components_;
   std::vector<window::Texture*> rendered_text_;
   math::Matrix4x4 projmat_;
   math::Matrix4x4 viewmat_;

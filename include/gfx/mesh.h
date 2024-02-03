@@ -1,10 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <fstream>
-#include <algorithm>
-#include <strstream>
-#include <stdexcept>
 
 #include "math/vec3.h"
 #include "math/vec2.h"
@@ -12,29 +8,29 @@
 
 namespace eng::gfx {
 
+class Renderer3D;
+
 class Mesh {
+friend Renderer3D;
 public:
-  Mesh(const char*, const char* texture_name="");
-
-  ~Mesh();
-
   // Methods
-  // ~ Getters 
   auto GetVerts(int*)     const -> math::Vec3*;
 
   auto GetUVCoords(int*)  const -> const math::Vec2*;
 
   auto GetTriangles(int*) const -> const Triangle*;
 
-  auto GetTextureName()   const -> const char*;
-
 private:
+  // Constructor
+  explicit Mesh(const char*);
+
+  ~Mesh();
+
   // Internal methods
-  // ~ OBJ
   auto LoadFromOBJ(const char*) -> void;
 
   auto ReadOBJ(
-    std::ifstream&,
+    const char*,
     std::vector<math::Vec3>&,
     std::vector<math::Vec2>&,
     std::vector<Triangle>&) -> void;
@@ -54,8 +50,6 @@ private:
 
   Triangle* triangles_ = nullptr;
   int triangles_count_ = 0;
-
-  const char* texture_name_ = "";
 
 };
 

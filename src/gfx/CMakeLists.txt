@@ -1,11 +1,11 @@
 # vars
 set(
   SOURCE_FILES
-  renderer3d.cpp
   mesh.cpp
-  render-data.cpp
-  mesh-render-data.cpp
-  texture-render-data.cpp)
+  renderer3d.cpp
+  components/renderer.cpp
+  components/mesh-renderer.cpp
+  components/texture-renderer.cpp)
 set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 
 # find packages

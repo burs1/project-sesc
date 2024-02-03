@@ -19,7 +19,7 @@ public:
   // Assigns texture size in pixels to passed pointers.
   auto GetSize(int*, int*) const -> void;
 
-  // Returns an SDL texture pointer.
+  // Returns a pointer to an SDL_Texture object.
   auto GetTexture()        const -> SDL_Texture*;
 
 private:

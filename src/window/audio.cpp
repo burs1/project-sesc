@@ -7,41 +7,8 @@
 #include "math/vec3.h"
 #include "math/vec2.h"
 #include "window/audio.h"
-#include "logger/logger.h"
 
 namespace eng::window {
-
-Audio* Audio::kInstance = nullptr;
-
-// - Static methods -
-auto Audio::Create() -> void {
-  if (not kInstance) {
-    kInstance = new Audio();
-    log::Info("Audio system instance created");
-    return;
-  }
-
-  throw std::runtime_error("Trying to create an audio system instance when it is already created");
-}
-
-
-auto Audio::GetInstance() -> Audio* {
-  if (kInstance) { return kInstance; }
-
-  throw std::runtime_error("Trying to get an audio system instance when it doesn't exist");
-}
-
-
-auto Audio::Destroy() -> void {
-  if (kInstance) {
-    delete kInstance;
-    log::Info("Audio system destroyed");
-    return;
-  }
-
-  throw std::runtime_error("Trying to destroy an audio system when it doens't exist");
-}
-
 
 // - Methods -
 void Audio::SetGlobalVolume(float volume) {

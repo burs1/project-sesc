@@ -1,12 +1,22 @@
+#include <vector>
+#include <fstream>
+#include <algorithm>
+#include <strstream>
+#include <stdexcept>
+
+#include "math/vec3.h"
+#include "math/vec2.h"
 #include "gfx/mesh.h"
+#include "gfx/triangle.h"
 
 namespace eng::gfx {
-  Mesh::Mesh(const char* file, const char* texture_name)
-    : texture_name_(texture_name) {
+  // Constructor
+  Mesh::Mesh(const char* file) {
     LoadFromOBJ(file);
   }
 
 
+  // Destructor
   Mesh::~Mesh() {
     delete[] verts_;
     delete[] triangles_;
@@ -25,38 +35,28 @@ namespace eng::gfx {
     return arr;
   }
 
+
   auto Mesh::GetUVCoords(int* uv_coords_count) const -> const math::Vec2* {
     *uv_coords_count = uv_coords_count_;
     return uv_coords_;
   }
+
 
   auto Mesh::GetTriangles(int* triangles_count) const -> const Triangle* {
     *triangles_count = triangles_count_;
     return triangles_;
   }
 
-  auto Mesh::GetTextureName() const -> const char* {
-    return texture_name_;
-  }
-
 
   // Internal methods
   // ~ OBJ
   auto Mesh::LoadFromOBJ(const char *file) -> void {
-    std::ifstream in(file);
-
-    // Check if file was successfully loaded
-    if (!in.is_open()) {
-      throw std::runtime_error("File \"" + std::string(file) + "\"not found");
-    }
-
     // Read file content
     std::vector<math::Vec3> new_verts;
     std::vector<math::Vec2> new_uv_coords;
     std::vector<Triangle> new_triangles;
 
-    ReadOBJ(in, new_verts, new_uv_coords, new_triangles);
-    in.close();
+    ReadOBJ(file, new_verts, new_uv_coords, new_triangles);
 
     CopyDataFromVectors(new_verts, new_uv_coords, new_triangles);
    
@@ -65,10 +65,17 @@ namespace eng::gfx {
 
 
   auto Mesh::ReadOBJ(
-      std::ifstream& in,
+      const char* file,
       std::vector<math::Vec3>& new_verts,
       std::vector<math::Vec2>& new_uv_coords,
       std::vector<Triangle>& new_triangles) -> void {
+    std::ifstream in(file);
+
+    // Check if file was successfully loaded
+    if (!in.is_open()) {
+      throw std::runtime_error("File \"" + std::string(file) + "\"not found");
+    }
+
     char line[128];
     char junk;
 
@@ -151,6 +158,8 @@ namespace eng::gfx {
         );
       }
     }
+
+    in.close();
   }
 
 
@@ -174,11 +183,6 @@ namespace eng::gfx {
     }
 
     // Copy uv coords data
-    if (texture_name_[0] == '\0') {
-      uv_coords_ = new math::Vec2[0];
-      return;
-    }
-
     uv_coords_count_ = new_uv_coords.size();
     uv_coords_ = new math::Vec2[uv_coords_count_];
     for (int i=0; i<uv_coords_count_; ++i) {

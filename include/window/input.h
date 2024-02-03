@@ -4,14 +4,16 @@
 
 namespace eng::window {
 
+class Window; // forward declaration to make "Window"
+              // a friend class of Input, so nobody else
+              // couldn't instantiate it.
+
 class Input {
+friend Window;
 public:
-  // - Static methods -
-  static auto Create()      -> void;
+  // Constructor
+  Input(SDL_Window*);
 
-  static auto GetInstance() -> Input*;
-
-  static auto Destroy()     -> void;
 
   // - Methods -
   // Read keyboard and mouse states at current frame and copies
@@ -19,42 +21,50 @@ public:
   // moves cursor to the center of the SDL window.
   auto Update() -> void;
 
+
+  // Sets "is_cursor_locked_" variable to passed value.
+  auto SetCursorLock(bool)                -> void;
+
+
   // Returns true if the key is down in the current frame,
   // else returns false.
   auto IsKeyDown(SDL_Scancode)      const -> bool;
+
 
   // Returns true if the key was up in the previous frame and
   // down in the current, else returns false.
   auto IsKeyPressed(SDL_Scancode)   const -> bool;
 
+
   // Returns true if the key was down in the previous frame and
   // up in the current, else returns false.
   auto IsKeyReleased(SDL_Scancode)  const -> bool;
+
 
   // Returns true if the mouse button down in the current frame,
   // else returns false.
   auto IsMouseButtonDown(int)       const -> bool;
 
+
   // Returns true if the mouse button was up in the previous frame
   // and down in the current, else return false.
   auto IsMouseButtonPressed(int)    const -> bool;
+
 
   // Returns true if the mouse button was down in the previous frame
   // and up in the current, else return false.
   auto IsMouseButtonReleased(int)   const -> bool;
 
+
   // Assigns relative mouse pixel position in window to passed pointers. 
   auto GetMousePosition(int*, int*) const -> void;
+
 
   // Assigns mouse pixel position delta to passed pointers.
   auto GetMouseDelta(int*, int*)    const -> void;
 
-  // Sets "is_cursor_locked_" variable to passed value.
-  auto SetCursorLock(bool)                -> void;
 
 private:
-  Input();
-  
   // Vars
   SDL_Window* sdl_window_ = nullptr;
 
@@ -71,7 +81,6 @@ private:
 
   bool is_cursor_locked_ = false;
 
-  static Input* kInstance;
 
 };
 

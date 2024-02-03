@@ -6,76 +6,42 @@
 
 #include "gfx/mesh.h"
 #include "gfx/renderer3d.h"
-#include "gfx/render-data.h"
 #include "gfx/raw-triangle.h"
-#include "gfx/mesh-render-data.h"
-#include "gfx/texture-render-data.h"
+#include "gfx/components/renderer.h"
 #include "math/vec3.h"
 #include "math/matrix4x4.h"
 #include "logger/logger.h"
 
 namespace eng::gfx {
 
-Renderer3D* Renderer3D::kInstance = nullptr;
-
-// Static methods
-auto Renderer3D::Create() -> void {
-  if (not kInstance) {
-    kInstance = new Renderer3D();
-    log::Info("Renderer3D instance created");
-    return;
-  }
-
-  throw std::runtime_error("Trying to create a renderer3D instance when it is already open");
-}
-
-auto Renderer3D::GetInstance() -> Renderer3D* {
-  if (kInstance) { return kInstance; }
-
-  throw std::runtime_error("Trying to get a renderer3D instance when it doesn't exist");
-}
-
-auto Renderer3D::Destroy() -> void {
-  if (kInstance) {
-    log::Info("Renderer3D instance destroyed");
-    delete kInstance;
-    return;
-  }
-
-  throw std::runtime_error("Trying to destroy a renderer3D instance when it doens't exist");
-}
-
-Renderer3D::Renderer3D()
-  : drawer_(window::Drawer::GetInstance()) {
+// Constructor
+Renderer3D::Renderer3D(window::Drawer* drawer)
+  : drawer_(drawer) {
     SetPerspective(70.0f, 0.1f, 1000.0f);
     SetSunRotation(math::Vec3(1, 1, 1));
+    log::Info("Renderer3D created");
 }
 
-Renderer3D::~Renderer3D() {
-  // Destroy all unredered render data
-  for (auto render_data : render_queue_) {
-    delete render_data;
-  }
 
+// Destructor
+Renderer3D::~Renderer3D() {
   // Unload all loaded meshes
   for (auto [name, mesh] : meshes_) {
     delete mesh;
   }
-
+  log::Info("Renderer3D destroyed");
   // Maps and vectors frees automaticly
 }
 
 
 // Methods
 // ~ Resources
-auto Renderer3D::LoadMesh(
-    const char* path, const char* mesh_name, const char* sprite) -> void {
+auto Renderer3D::LoadMesh(const char* file, const char* mesh_name) -> void {
   // Check if mesh with such name already exists
   if (meshes_.contains(mesh_name)) {
     throw std::runtime_error("Mesh with name \"" + std::string(mesh_name) + "\" already exists");
   }
-
-  meshes_[mesh_name] = new Mesh(path, sprite);
+  meshes_[mesh_name] = new Mesh(file);
 }
 
 
@@ -89,7 +55,6 @@ auto Renderer3D::UnloadMesh(const char* mesh_name) -> void {
 auto Renderer3D::SetPerspective(float fov, float near, float far) -> void {
   float aspect_ratio = drawer_->GetAspectRatio();
   projmat_.SetPerspective(fov, aspect_ratio, near, far);
-
   fov_ = fov;
   near_ = near;
   far_ = far;
@@ -99,7 +64,6 @@ auto Renderer3D::SetPerspective(float fov, float near, float far) -> void {
 auto Renderer3D::SetFOV(float fov) -> void {
   float aspect_ratio = drawer_->GetAspectRatio();
   projmat_.SetPerspective(fov, aspect_ratio, near_, far_);
-
   fov_ = fov;
 }
 
@@ -107,7 +71,6 @@ auto Renderer3D::SetFOV(float fov) -> void {
 auto Renderer3D::SetNearPlane(float near) -> void {
   float aspect_ratio = drawer_->GetAspectRatio();
   projmat_.SetPerspective(fov_, aspect_ratio, near, far_);
-
   near_ = near;
 }
 
@@ -115,7 +78,6 @@ auto Renderer3D::SetNearPlane(float near) -> void {
 auto Renderer3D::SetFarPlane(float far) -> void {
   float aspect_ratio = drawer_->GetAspectRatio();
   projmat_.SetPerspective(fov_, aspect_ratio, near_, far);
-
   far_ = far;
 }
 
@@ -123,7 +85,6 @@ auto Renderer3D::SetFarPlane(float far) -> void {
 auto Renderer3D::SetPlanes(float far, float near) -> void {
   float aspect_ratio = drawer_->GetAspectRatio();
   projmat_.SetPerspective(fov_, aspect_ratio, near, far);
-
   far_ = far;
   near_ = near;
 }
@@ -143,80 +104,21 @@ auto Renderer3D::SetSunRotation(const math::Vec3 &dir) -> void {
 
 
 // ~ Render
-auto Renderer3D::AddMeshToQueue(
-    const math::Vec3& pos,
-    const math::Vec3& rot,
-    const math::Vec3& scale,
-    bool ignore_lightning,
-    const char* mesh_name) -> void {
-  Mesh* mesh = meshes_[mesh_name];
-  render_queue_.push_back(
-    new MeshRenderData(
-      pos, rot, scale, ignore_lightning, mesh,
-      drawer_->GetTexture( mesh->GetTextureName() )
-    ));
-}
-
-
-auto Renderer3D::AddTextureToQueue(
-    const math::Vec3& pos,
-    const math::Vec3& rot,
-    const math::Vec3& scale,
-    bool ignore_lightning,
-    const char* texture_name) -> void {
-  render_queue_.push_back(
-    new TextureRenderData(
-      pos, rot, scale, ignore_lightning,
-      drawer_->GetTexture(texture_name)
-    ));
-}
-
-
-auto Renderer3D::AddTextToQueue(
-    const math::Vec3& pos,
-    const math::Vec3& rot,
-    const math::Vec3& scale,
-    bool ignore_lightning,
-    const char* text) -> void {
-
-  window::Texture* text_texture = drawer_->RenderText(text);
-  rendered_text_.push_back(text_texture);
-
-  render_queue_.push_back(
-    new TextureRenderData(
-      pos, rot, scale, ignore_lightning,
-      text_texture
-    ));
-}
-
-
-auto Renderer3D::RenderQueue() -> void {
+auto Renderer3D::RenderFrame() -> void {
   // Calc view matrix
   log::Info("Renderer3D: start frame rendering ");
   CalcViewMatrix();
   std::vector<RawTriangle> triangles_to_draw;
 
   // Render Queue
-  log::Info("Renderer3D: process " + std::to_string(render_queue_.size()) + " render data object(s)");
-  for(auto& render_data : render_queue_) {
-    ProcessTriangles(render_data, triangles_to_draw);
+  log::Info("Renderer3D: process " + std::to_string(renderer_components_.size()) + " render data object(s)");
+  for(auto& renderer : renderer_components_) {
+    ProcessTriangles(renderer, triangles_to_draw);
   }
 
   SortTriangles(triangles_to_draw);
 
   DrawTriangles(triangles_to_draw);
-
-  log::Info("Renderer3D: free up memory");
-  // Destroy all render data
-  for (auto render_data : render_queue_) {
-    delete render_data;
-  }
-  render_queue_.clear();
-
-  for (auto texture : rendered_text_) {
-    delete texture;
-  }
-  rendered_text_.clear();
 }
 
 // Internal methods
@@ -261,12 +163,9 @@ auto Renderer3D::CalcTransformMatrix(
 
 
 auto Renderer3D::ProcessTriangles(
-    const RenderData* render_data,
+    const Renderer* render_data,
     std::vector<RawTriangle>& triangles_to_draw) -> void {
-  // Calc transform matrix
-  math::Vec3 pos, rot, scale;
-  render_data->GetTransform(&pos, &rot, &scale);
-  math::Matrix4x4 transfmat = CalcTransformMatrix(pos, rot, scale);
+  math::Matrix4x4 transfmat = render_data->GetTransformMatrix();
 
   // Copy and transform verts
   int verts_count;

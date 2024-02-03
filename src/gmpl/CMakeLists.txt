@@ -1,5 +1,9 @@
 # vars
-set(SOURCE_FILES entity.cpp scene.cpp)
+set(SOURCE_FILES
+  component.cpp
+  entity.cpp
+  scene.cpp
+  components/transform.cpp)
 set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 
 # add lib 

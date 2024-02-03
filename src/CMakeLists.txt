@@ -5,6 +5,7 @@ set(INCLUDE_DIRS window)
 find_package(spdlog REQUIRED)
 
 # add subdirs
+add_subdirectory(app)
 add_subdirectory(gfx)
 add_subdirectory(gmpl)
 add_subdirectory(math)
@@ -19,6 +20,7 @@ target_include_directories(Engine PUBLIC ${INCLUDE_DIRS})
 # link libs
 target_link_libraries(
   Engine
+  PUBLIC App
   PUBLIC GFX
   PUBLIC Window
   PUBLIC Gameplay

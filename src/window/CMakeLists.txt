@@ -3,7 +3,6 @@ set(
   SOURCE_FILES
   audio.cpp
   drawer-sdl.cpp
-  drawer.cpp
   input.cpp
   texture.cpp
   window.cpp)

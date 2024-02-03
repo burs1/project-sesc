@@ -1,53 +1,65 @@
-#include <iostream>
 #include <stdexcept>
 
 #include <SDL.h>
 
 #include "window/input.h"
 #include "window/audio.h"
-#include "window/drawer.h"
 #include "window/window.h"
 #include "window/drawer-sdl.h"
 #include "logger/logger.h"
 
 namespace eng::window {
 
-Window* Window::kInstance = nullptr;
+// Constructor
+Window::Window (const char *title, int width, int height)
+    : width_(width), height_(height) {
+  InitSDL();
+  CreateSDLWindow(title, width, height);
 
-// - Static methods -
-auto Window::Create(const char* name, int width, int height) -> void {
-  if (not kInstance) {
-    kInstance = new Window(name, width, height);
-    log::Info("Window instance created");
-    InitSubsytems();
-    return;
-  }
+  // Initialise subsystems
+  input_ = new Input(sdl_window_);
+  audio_ = new Audio();
+  drawer_ = new DrawerSDL(sdl_window_);
 
-  throw std::runtime_error("Trying to create a window when it is already open");
+  log::Info("Window created");
 }
 
 
-auto Window::GetInstance() -> Window* {
-  if (kInstance) { return kInstance; }
+// Destructor
+Window::~Window() {
+  // Destroy systems
+  delete input_;
+  delete audio_;
+  delete drawer_;
 
-  throw std::runtime_error("Trying to get a window instance when it doesn't exist");
-}
+  SDL_DestroyWindow(sdl_window_);
+  log::Info("SDL_Window destroyed");
 
+  SDL_Quit();
+  log::Info("SDL_main quit");
 
-auto Window::Destroy() -> void {
-  if (kInstance) {
-    delete kInstance;
-    log::Info("Window instance destroyed");
-    return;
-  }
-
-  throw std::runtime_error("Trying to destroy a window when it doens't exist");
+  log::Info("Window destroyed");
 }
 
 
 // - Methods -
-auto Window::GetSDLWindowInstance() const -> SDL_Window* {
+auto Window::GetSDLWindow() const -> SDL_Window* {
   return sdl_window_;
+}
+
+
+auto Window::GetInput() const -> Input* {
+  return input_;
+}
+
+
+auto Window::GetAudio() const -> Audio* {
+  return audio_;
+}
+
+
+auto Window::GetDrawer() const -> Drawer* {
+  return drawer_;
 }
 
 
@@ -69,6 +81,7 @@ auto Window::IsCloseRequested() const -> bool {
 
 auto Window::PollEvents() -> void {
   SDL_Event e;
+  // Poll SDL window events
   while(SDL_PollEvent(&e)) {
     if (e.type == SDL_QUIT) {
       log::Info("Window close requested");
@@ -85,51 +98,33 @@ auto Window::UpdateSurface() -> void {
 }
 
 
-// Constructor
-Window::Window (const char *title, int width, int height)
-    : width_(width), height_(height) {
+// - Internal statis methods -
+auto Window::InitSDL() -> void {
   // Init SDL
   if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
-    throw std::runtime_error(SDL_GetError());
+    throw std::runtime_error( SDL_GetError() );
   }
 
+  log::Info("SDL_main initialised");
+}
+
+
+auto Window::CreateSDLWindow(const char* title, int width, int height) -> void {
   // Create window
   sdl_window_ = SDL_CreateWindow(
     title,
     SDL_WINDOWPOS_CENTERED,
     SDL_WINDOWPOS_CENTERED,
-    width_, height_,
+    width, height,
     SDL_WINDOW_SHOWN
   );
 
+  // Check if window was successfully instantiated
   if (sdl_window_ == NULL) {
-    throw std::runtime_error(SDL_GetError());
+    throw std::runtime_error( SDL_GetError() );
   }
-}
 
-// - Internal statis methods -
-auto Window::InitSubsytems() -> void {
-  Input::Create();
-  Audio::Create();
-  Drawer::Create<DrawerSDL>();
-
-  Window* window = Window::GetInstance();
-  window->input_ = Input::GetInstance();
-  window->audio_ = Audio::GetInstance();
-  window->drawer_ = Drawer::GetInstance();
-}
-
-
-// Destructor
-Window::~Window() {
-  // Destroy systems
-  Input::Destroy();
-  Audio::Destroy();
-  Drawer::Destroy();
-
-  SDL_DestroyWindow(sdl_window_);
-
-  SDL_Quit();
+  log::Info("SDL_Window created");
 }
 
 
