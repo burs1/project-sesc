@@ -1,6 +1,7 @@
 #include "math/vec3.h"
 #include "math/matrix4x4.h"
 #include "gmpl/components/transform.h"
+#include "logger/logger.h"
 
 namespace eng::gmpl {
 
@@ -84,12 +85,14 @@ auto Transform::Up() -> math::Vec3 {
 auto Transform::UpdateRotmat() -> void {
   if (is_rotmat_updated_) { return; }
   rotmat_.SetRotation(rot_);
+  is_rotmat_updated_ = true;
 }
 
 
 auto Transform::UpdateTransfmat() -> void {
   if (is_transfmat_updated_) { return; }
   transfmat_.SetTransform(pos_, rot_, scale_);
+  is_transfmat_updated_ = true;
 }
 
 

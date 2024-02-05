@@ -11,11 +11,9 @@ class Window; // forward declaration to make "Window"
 class Input {
 friend Window;
 public:
-  // Constructor
   Input(SDL_Window*);
 
 
-  // - Methods -
   // Read keyboard and mouse states at current frame and copies
   // states of the previous frame. If "is_cursor_locked_" is true
   // moves cursor to the center of the SDL window.
@@ -65,7 +63,6 @@ public:
 
 
 private:
-  // Vars
   SDL_Window* sdl_window_ = nullptr;
 
   const Uint8* keyboard_state_ = nullptr;

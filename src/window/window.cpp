@@ -10,9 +10,9 @@
 
 namespace eng::window {
 
-// Constructor
 Window::Window (const char *title, int width, int height)
-    : width_(width), height_(height) {
+    : width_(width), height_(height)
+{
   InitSDL();
   CreateSDLWindow(title, width, height);
 
@@ -26,7 +26,8 @@ Window::Window (const char *title, int width, int height)
 
 
 // Destructor
-Window::~Window() {
+Window::~Window()
+{
   // Destroy systems
   delete input_;
   delete audio_;
@@ -79,16 +80,15 @@ auto Window::IsCloseRequested() const -> bool {
 }
 
 
-auto Window::PollEvents() -> void {
+auto Window::PollEvents() -> void
+{
   SDL_Event e;
   // Poll SDL window events
-  while(SDL_PollEvent(&e)) {
+  while(SDL_PollEvent(&e))
     if (e.type == SDL_QUIT) {
       log::Info("Window close requested");
       is_close_requested_ = true;
     }
-  }
-
   input_->Update();
 }
 
@@ -98,13 +98,10 @@ auto Window::UpdateSurface() -> void {
 }
 
 
-// - Internal statis methods -
 auto Window::InitSDL() -> void {
   // Init SDL
-  if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+  if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     throw std::runtime_error( SDL_GetError() );
-  }
-
   log::Info("SDL_main initialised");
 }
 
@@ -116,14 +113,11 @@ auto Window::CreateSDLWindow(const char* title, int width, int height) -> void {
     SDL_WINDOWPOS_CENTERED,
     SDL_WINDOWPOS_CENTERED,
     width, height,
-    SDL_WINDOW_SHOWN
-  );
+    SDL_WINDOW_SHOWN);
 
   // Check if window was successfully instantiated
-  if (sdl_window_ == NULL) {
+  if (sdl_window_ == NULL)
     throw std::runtime_error( SDL_GetError() );
-  }
-
   log::Info("SDL_Window created");
 }
 

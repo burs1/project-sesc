@@ -68,13 +68,13 @@ namespace eng::gfx {
       const char* file,
       std::vector<math::Vec3>& new_verts,
       std::vector<math::Vec2>& new_uv_coords,
-      std::vector<Triangle>& new_triangles) -> void {
+      std::vector<Triangle>& new_triangles) -> void
+  {
     std::ifstream in(file);
 
     // Check if file was successfully loaded
-    if (!in.is_open()) {
+    if (!in.is_open())
       throw std::runtime_error("File \"" + std::string(file) + "\"not found");
-    }
 
     char line[128];
     char junk;

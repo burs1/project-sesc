@@ -1,12 +1,22 @@
 #include <string>
 
 #include "app/app.h"
+#include "gfx/components/mesh-renderer.h"
 #include "gmpl/scene.h"
 #include "gmpl/entity.h"
 #include "gmpl/components/behaviour.h"
+#include "math/vec3.h"
 #include "window/window.h"
 #include "gfx/renderer3d.h"
 #include "logger/logger.h"
+
+class Rotator : public eng::gmpl::Behaviour {
+private:
+  auto OnUpdate() -> void override {
+    entity->transform->Rotate( eng::math::Vec3(0.0f, 0.01f, 0.0f) );
+    entity->transform->Translate( eng::math::Vec3(0.0f, 0.0f, -0.1f) );
+  }
+};
 
 namespace eng::app {
 
@@ -20,6 +30,8 @@ App::App(const char* assets_dir) {
   renderer3d_ = new gfx::Renderer3D(window_->GetDrawer());
   scene_ = new gmpl::Scene(window_, renderer3d_);
 
+  renderer3d_->SetRendererComponentsMap(&scene_->renderer_components_);
+
   log::Info("Engine systems initialised successfuly");
 
   OnCreate();
@@ -27,8 +39,12 @@ App::App(const char* assets_dir) {
   LoadAssets(assets_dir);
 
   // ------- DEBUG -----------
-  scene_->CreateEntity();
-  scene_->CreateEntity();
+  auto e = scene_->CreateEntity();
+  e->AddComponent<gfx::MeshRenderer>()->SetMesh( renderer3d_->meshes_["cube"] );
+  e->transform->SetPosition(math::Vec3(0.0f, 0.0f, 100.0f));
+  e->AddComponent<Rotator>();
+
+  window_->drawer_->SetClearColor(25, 25, 25);
   // -------------------------
 
   MainLoop();
@@ -64,6 +80,7 @@ auto App::MainLoop() -> void {
 
     window_->PollEvents();
     scene_->UpdateComponents();
+    renderer3d_->RenderFrame();
     window_->UpdateSurface();
   }
 
@@ -75,6 +92,7 @@ auto App::LoadAssets(const char* assets_dir) -> void {
   log::Info("Loading assets from \"" + std::string(assets_dir) + "\"");
 
   // do some cool stuff...
+  renderer3d_->LoadMesh("assets/models/cube.obj", "cube");
 
   log::Info("Assets loaded successfuly");
 }

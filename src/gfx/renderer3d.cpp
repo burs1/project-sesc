@@ -10,13 +10,15 @@
 #include "gfx/components/renderer.h"
 #include "math/vec3.h"
 #include "math/matrix4x4.h"
+#include "gmpl/scene.h"
 #include "logger/logger.h"
 
 namespace eng::gfx {
 
 // Constructor
 Renderer3D::Renderer3D(window::Drawer* drawer)
-  : drawer_(drawer) {
+  : drawer_(drawer)
+{
     SetPerspective(70.0f, 0.1f, 1000.0f);
     SetSunRotation(math::Vec3(1, 1, 1));
     log::Info("Renderer3D created");
@@ -24,11 +26,12 @@ Renderer3D::Renderer3D(window::Drawer* drawer)
 
 
 // Destructor
-Renderer3D::~Renderer3D() {
+Renderer3D::~Renderer3D()
+{
   // Unload all loaded meshes
-  for (auto [name, mesh] : meshes_) {
+  for (auto [name, mesh] : meshes_)
     delete mesh;
-  }
+
   log::Info("Renderer3D destroyed");
   // Maps and vectors frees automaticly
 }
@@ -90,9 +93,8 @@ auto Renderer3D::SetPlanes(float far, float near) -> void {
 }
 
 
-auto Renderer3D::SetCameraTransform(
-    const math::Vec3* pos,
-    const math::Vec3* rot) -> void {
+auto Renderer3D::SetCameraTransform(const math::Vec3 *pos,
+                                    const math::Vec3 *rot) -> void {
   camera_ = {pos, rot};
 }
 
@@ -106,37 +108,35 @@ auto Renderer3D::SetSunRotation(const math::Vec3 &dir) -> void {
 // ~ Render
 auto Renderer3D::RenderFrame() -> void {
   // Calc view matrix
-  log::Info("Renderer3D: start frame rendering ");
   CalcViewMatrix();
   std::vector<RawTriangle> triangles_to_draw;
 
   // Render Queue
-  log::Info("Renderer3D: process " + std::to_string(renderer_components_.size()) + " render data object(s)");
-  for(auto& renderer : renderer_components_) {
+  log::Info("Renderer3D: process " + std::to_string(renderer_components_->size()) + " renderer component(s)");
+  for(auto& [id, renderer] : *renderer_components_)
     ProcessTriangles(renderer, triangles_to_draw);
-  }
-
   SortTriangles(triangles_to_draw);
-
   DrawTriangles(triangles_to_draw);
 }
 
-// Internal methods
-// ~ Render
-auto Renderer3D::CalcViewMatrix() -> void {
+
+auto Renderer3D::SetRendererComponentsMap(
+    std::map<int, Renderer*> *map) -> void {
+  renderer_components_ = map;
+}
+
+
+auto Renderer3D::CalcViewMatrix() -> void
+{
   math::Matrix4x4 rotmat;
 
-  viewmat_.LookAt(math::Vec3(0, 0, 0), math::Vec3(0, 0, 1), math::Vec3(0, 1, 0));
-
   if (not camera_.rot) {
-    log::Warn("Renderer3D: using default cam rotation");
     math::Vec3 default_rot(0.0f, 0.0f, 0.0f);
     rotmat.SetRotation(default_rot);
   }
   else { rotmat.SetRotation(*camera_.rot); }
 
   if (not camera_.pos) {
-    log::Warn("Renderer3D: using default cam position");
     math::Vec3 default_pos(0.0f, 0.0f, 0.0f);
     viewmat_.LookAt(
       default_pos,
@@ -155,7 +155,8 @@ auto Renderer3D::CalcViewMatrix() -> void {
 auto Renderer3D::CalcTransformMatrix(
     const math::Vec3& pos,
     const math::Vec3& rot,
-    const math::Vec3& scale) -> math::Matrix4x4 {
+    const math::Vec3& scale) -> math::Matrix4x4
+{
   math::Matrix4x4 transf_mat;
   transf_mat.SetTransform(pos, rot, scale);
   return transf_mat;
@@ -164,7 +165,8 @@ auto Renderer3D::CalcTransformMatrix(
 
 auto Renderer3D::ProcessTriangles(
     const Renderer* render_data,
-    std::vector<RawTriangle>& triangles_to_draw) -> void {
+    std::vector<RawTriangle>& triangles_to_draw) -> void
+{
   math::Matrix4x4 transfmat = render_data->GetTransformMatrix();
 
   // Copy and transform verts
@@ -176,9 +178,8 @@ auto Renderer3D::ProcessTriangles(
 
   // Copy and transform all verts to view basis
   math::Vec3* viewed_verts = new math::Vec3[verts_count];
-  for (int i=0; i < verts_count; ++i) {
+  for (int i=0; i < verts_count; ++i)
     viewed_verts[i] = transformed_verts[i] * viewmat_;
-  }
 
   // Copy uv coords (POINTER SHOULDN'T BE DELETED)
   int uv_coords_count;
@@ -193,17 +194,15 @@ auto Renderer3D::ProcessTriangles(
     int verts_ids[] = {
       triangles[i].verts_ids[0],
       triangles[i].verts_ids[1],
-      triangles[i].verts_ids[2]
-    };
+      triangles[i].verts_ids[2]};
 
     // Skip face if it's normal points at opposite side
     math::Vec3 normal = math::Vec3::Cross(
         viewed_verts[ verts_ids[1] ] - viewed_verts[ verts_ids[0] ],
         viewed_verts[ verts_ids[2] ] - viewed_verts[ verts_ids[0] ]);
 
-    if (math::Vec3::Dot(normal, viewed_verts[ verts_ids[0] ]) > 0.0f) {
+    if (math::Vec3::Dot(normal, viewed_verts[ verts_ids[0] ]) > 0.0f)
       continue;
-    }
 
     // Calc light
     float lightk = 1.0f;
@@ -242,7 +241,8 @@ auto Renderer3D::ProcessTriangles(
   delete [] viewed_verts;
 }
 
-auto Renderer3D::SortTriangles(std::vector<RawTriangle>& triangles) -> void {
+auto Renderer3D::SortTriangles(std::vector<RawTriangle>& triangles) -> void
+{
   log::Info("Renderer3D: sort " + std::to_string(triangles.size()) +  " triangle(s)");
   sort(
     triangles.begin(),
@@ -251,12 +251,12 @@ auto Renderer3D::SortTriangles(std::vector<RawTriangle>& triangles) -> void {
       float z1 = trng1.verts[0].z + trng1.verts[1].z + trng1.verts[2].z;
       float z2 = trng2.verts[0].z + trng2.verts[1].z + trng2.verts[2].z;
       return z1 > z2;
-    }
-  );
+    });
 }
 
 auto Renderer3D::DrawTriangles(
-    std::vector<RawTriangle>& triangles_to_draw) -> void {
+    std::vector<RawTriangle>& triangles_to_draw) -> void
+{
   log::Info("Renderer3D: draw " + std::to_string(triangles_to_draw.size()) + " triangle(s)");
   for (auto& triangle : triangles_to_draw) {
     // Clip triangle
@@ -275,7 +275,8 @@ auto Renderer3D::DrawTriangles(
   }
 }
 
-auto Renderer3D::DrawTriangle(RawTriangle& triangle) -> void {
+auto Renderer3D::DrawTriangle(RawTriangle& triangle) -> void
+{
   drawer_->SetDrawColor(
     triangle.color[0],
     triangle.color[1],
@@ -285,8 +286,7 @@ auto Renderer3D::DrawTriangle(RawTriangle& triangle) -> void {
     drawer_->DrawTriangle(
       triangle.verts[0].x, triangle.verts[0].y,
       triangle.verts[1].x, triangle.verts[1].y,
-      triangle.verts[2].x, triangle.verts[2].y
-    );
+      triangle.verts[2].x, triangle.verts[2].y);
     return;
   }
 
@@ -302,11 +302,12 @@ auto Renderer3D::DrawTriangle(RawTriangle& triangle) -> void {
 }
 
 
-auto Renderer3D::ProjectTriangle(RawTriangle& triangle) -> void {
+auto Renderer3D::ProjectTriangle(RawTriangle& triangle) -> void
+{
   int width, height;
   drawer_->GetResolution(&width, &height);
-  
-  for (int j=0; j < 3; ++j) {
+
+  for (int j=0; j<3; ++j) {
     triangle.verts[j] *= projmat_;
 
     triangle.verts[j].x += 1;
@@ -321,11 +322,10 @@ auto Renderer3D::ProjectTriangle(RawTriangle& triangle) -> void {
 
 
 auto Renderer3D::FindPlaneIntersectionPoint(
-    math::Vec3 plane_p,
-    math::Vec3 plane_n,
-    const math::Vec3 &start,
-    const math::Vec3 &end,
-    float &t) -> math::Vec3 {
+    math::Vec3 plane_p, math::Vec3 plane_n,
+    const math::Vec3 &start, const math::Vec3 &end,
+    float &t) -> math::Vec3
+{
   plane_n.Normalize();
 
   float plane_d = -math::Vec3::Dot(plane_n, plane_p);
@@ -339,14 +339,12 @@ auto Renderer3D::FindPlaneIntersectionPoint(
   return start + inter_line;
 }
 
-auto Renderer3D::ClipTriangleAgainstPlane(
-    math::Vec3 plane_p,
-    math::Vec3 plane_n,
-    RawTriangle in,
-    RawTriangle& out1,
-    RawTriangle& out2) -> int {
-  plane_n.Normalize();
 
+auto Renderer3D::ClipTriangleAgainstPlane(
+    math::Vec3 plane_p, math::Vec3 plane_n,
+    RawTriangle in, RawTriangle& out1, RawTriangle& out2) -> int
+{
+  plane_n.Normalize();
   auto dist = [&](math::Vec3 &p) {
     math::Vec3 n = math::Vec3::Normalized(p);
     return math::Vec3::Dot(plane_n, p) - math::Vec3::Dot(plane_n, plane_p);
@@ -377,8 +375,7 @@ auto Renderer3D::ClipTriangleAgainstPlane(
    if (inside_count == 0) { return 0; }
  
    if (inside_count == 3) {
-     out1 = in;
-     return 1;
+     out1 = in; return 1;
    }
  
    if (inside_count == 1 && outside_count == 2) {

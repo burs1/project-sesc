@@ -5,22 +5,22 @@
 namespace eng::window {
 
 // Constructor
-Input::Input(SDL_Window* sdl_window)
-  : sdl_window_( sdl_window ) {
-  // Read keyboard and mouse states
+Input::Input(SDL_Window *sdl_window)
+  : sdl_window_(sdl_window)
+{
   keyboard_state_ = SDL_GetKeyboardState(NULL);
   mouse_state_ = SDL_GetMouseState(&mousex_, &mousey_);
 }
 
 // - Methods -
-void Input::Update() {
+void Input::Update()
+{
   // Copy previous states
-  for (int i = 0; i < 264; ++i) {
+  for (int i = 0; i < 264; ++i)
     previous_keyboard_state_[i] = keyboard_state_[i];
-  }
-
   previous_mouse_state_ = mouse_state_;
 
+  // Lock cursor at the center of the window and calc mouse delta
   if (is_cursor_locked_) {
     int w, h;
     SDL_GetWindowSize(sdl_window_, &w, &h);

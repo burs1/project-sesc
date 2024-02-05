@@ -30,7 +30,6 @@ public:
 
   Window& operator=(Window&&) = delete;
 
-  // - Methods -
   // Polls SDL events and updates input system.
   auto PollEvents()                 -> void;
 
@@ -71,21 +70,17 @@ public:
   auto IsCloseRequested()     const -> bool;
 
 
-  // Vars
   Input* input_;
   Audio* audio_;
   Drawer* drawer_;
 
 private:
-  // Contrstructor
   explicit Window (const char*, int, int);
 
 
-  // Destructor
   ~Window();
 
 
-  // - Internal static methods -
   // Init SDL library. If SDL wasn't successfuly initialized
   // throws an exception.
   auto InitSDL()                              -> void;
@@ -95,12 +90,10 @@ private:
   // wasn't successfully initialized throws an exception.
   auto CreateSDLWindow(const char*, int, int) -> void;
 
-  
-  // Vars
+
   SDL_Window *sdl_window_;
 
   int width_, height_;
-
   bool is_fullscreen_      = false;
   bool is_close_requested_ = false;
 };

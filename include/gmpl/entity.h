@@ -24,7 +24,7 @@ public:
     return component;
   }
 
-  Transform* const transform;
+  Transform*& transform;
 
 private:
   // Contructor
@@ -33,6 +33,7 @@ private:
   // Destructor
   ~Entity();
 
+  Transform* transform_;
   std::vector<Component*> components_;
 
   Scene* const scene_;

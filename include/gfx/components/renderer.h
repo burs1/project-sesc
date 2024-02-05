@@ -9,9 +9,11 @@
 
 namespace eng::gfx {
 
+class Scene;
 class Renderer3D;
 
-class Renderer : gmpl::StaticComponent {
+class Renderer : public gmpl::StaticComponent {
+friend Scene;
 friend Renderer3D;
 public:
   // Sets "ignore_lightning_" to a passed value.

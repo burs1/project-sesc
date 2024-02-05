@@ -8,16 +8,13 @@ class Entity;
 class Component {
 friend Scene;
 protected:
-  // Contrusctor
   Component();
 
-  // Destructor
   ~Component();
 
   Entity*& entity;
 
 private:
-  // - Internal methods -
   // Sets a pointer to a parent entity and assigns this component's id.
   // Method moved from component constructor to avoid overriding constructor
   // for each derrived class.

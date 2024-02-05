@@ -72,7 +72,7 @@ private:
   // Updates transform map if needed.
   auto UpdateTransfmat() -> void;
 
-  math::Vec3 pos_, rot_, scale_;
+  math::Vec3 pos_, rot_, scale_ = math::Vec3(1.0f, 1.0f, 1.0f);
   math::Matrix4x4 rotmat_, transfmat_;
 
   bool is_rotmat_updated_ = true;

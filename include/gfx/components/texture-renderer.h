@@ -7,7 +7,10 @@
 
 namespace eng::gfx {
 
+class Scene;
+
 class TextureRenderer : public Renderer {
+friend Scene;
 public:
   // - Methods -
   auto SetTexture(window::Texture*) -> void;

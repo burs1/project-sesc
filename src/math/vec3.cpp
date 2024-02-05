@@ -116,11 +116,8 @@ auto Vec3::operator/=(const float &value) -> void {
   z /= value;
 }
 
-auto Vec3::operator*=(const Matrix4x4 &mtrx)       -> void {
-  Vec3 res = operator*(mtrx);
-  x = res.x;
-  y = res.y;
-  z = res.z;
+auto Vec3::operator*=(const Matrix4x4 &mtrx) -> void {
+  *this = operator*(mtrx);
 }
 
 auto Vec3::operator*(const Matrix4x4 &mtrx) -> Vec3 {

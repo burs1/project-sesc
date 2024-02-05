@@ -15,7 +15,6 @@ class Window; // forward declaration to make "Window"
 class Audio {
 friend Window;
 public:
-  // - Methods -
   // Assigns the given value to the "global_volume_" variable.
   // It is used to scale the volume of all played sounds.
   auto SetGlobalVolume(float)                                     -> void;
@@ -28,7 +27,7 @@ public:
 
 
   // Loads a file into a Sound object.
-  auto LoadSound(const char*, const char*)                        -> void;
+  auto LoadSound(const char *file, const char *name)              -> void;
 
 
   // Unloads a Sound object by it's name.
@@ -37,41 +36,31 @@ public:
 
   // Plays a sound from the Sound object specified by it's name.
   // Volume, pan and pitch of the played sound can be specified.
-  auto PlaySound(
-    const char*,
-    float volume=1.0f,
-    float pan=0.0f,
-    float pitch=1.0f)  -> void;
+  auto PlaySound(const char*, float volume=1.0f,
+                 float pan=0.0f, float pitch=1.0f)  -> void;
 
 
   // Plays a sound from the Sound object specified by it's name
   // automaticly scaling it's pan and volume depending on
   // sound position, sound range, listener position and 
   // listener rotation.
-  auto PlaySound3D(
-    const char*,
-    math::Vec3,
-    float, float volume=1.0f) -> void;
+  auto PlaySound3D(const char*, math::Vec3,
+                   float range, float volume=1.0f) -> void;
 
 
 private:
-  // Constructor
   Audio();
 
-  // Destructor
   ~Audio();
 
-  // Vars
   std::map<const char*, Mix_Chunk*> sounds_;
 
   struct {
-    const math::Vec3* pos;
-    const math::Vec3* rot;
+    const math::Vec3 *pos;
+    const math::Vec3 *rot;
   } listener_;
 
   float global_volume_ = 1.0f;
-
-  static Audio* kInstance;
 
 };
 

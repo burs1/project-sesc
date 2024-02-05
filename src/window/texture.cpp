@@ -16,7 +16,6 @@ Texture::~Texture() {
 }
 
 
-// ~ Getters
 auto Texture::GetSize(int* width, int* height) const -> void {
   *width = rect_.w;
   *height = rect_.h;
