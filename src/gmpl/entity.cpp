@@ -6,8 +6,7 @@
 namespace eng::gmpl {
   Entity::Entity(Scene* scene, window::Window* context_window,
                  gfx::Renderer3D* renderer3d, int id)
-    : scene_(scene), context_window_(context_window),
-      renderer3d_(renderer3d), id_(id), transform(transform_) {
+    : scene_(scene), id_(id), transform(transform_) {
     transform_ = AddComponent<Transform>();
     log::Info("New entity created with id " + std::to_string(id_));
   }
@@ -16,4 +15,6 @@ namespace eng::gmpl {
   Entity::~Entity() {
     log::Info("Entity with id " + std::to_string(id_) + " destroyed");
   }
+
+
 }

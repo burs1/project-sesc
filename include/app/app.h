@@ -7,40 +7,31 @@
 namespace eng::app {
 
 class App {
-public:
+ public:
   App(const char*);
-
-
   ~App();
-
 
   // This method calls before the initialisation of all engine systems.
   virtual auto OnAwake()   -> void {}
 
-
   // This methods calls after the initialisation of all engine systems.
   virtual auto OnCreate()  -> void {}
 
-
-  // This methods call before window is goind to be closed and all engine
+  // Calls before window is goind to be closed and all engine
   // systems are deinitialised.
-  virtual auto OnAsleep()  -> void {}
+  virtual auto OnFall()  -> void {}
 
-
-  // This methods calls after window closed and all engine
+  // Calls after window closed and all engine
   // systems deinitialised.
   virtual auto OnDestroy() -> void {}
-
 
 private:
   // Starts main game loop and stays in cycle until
   // window close is requested.
   auto MainLoop() -> void;
 
-
   // Load assets from specified directory.
   auto LoadAssets(const char*) -> void;
-
 
   gmpl::Scene* scene_;
   window::Window* window_;

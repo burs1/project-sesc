@@ -11,9 +11,9 @@ class Scene;
 
 class TextureRenderer : public Renderer {
 friend Scene;
-public:
-  // - Methods -
-  auto SetTexture(window::Texture*) -> void;
+ public:
+  // Sets renderer texture to a given.
+  auto SetTexture(const window::Texture*) -> void;
   
   auto GetVerts(int*)         const -> math::Vec3* override;
 
@@ -21,18 +21,17 @@ public:
 
   auto GetTriangles(int*)     const -> const Triangle* override;
 
-  auto GetTexture()           const -> window::Texture* override;
+  auto GetTexture()           const -> const window::Texture* override;
 
 private:
-  // - Events -
   auto OnCreate()  -> void override;
 
   auto OnDestroy() -> void override;
 
-  window::Texture* texture_ = nullptr;
-  math::Vec3* verts_ = nullptr;
+  math::Vec3* verts_     = nullptr;
   math::Vec2* uv_coords_ = nullptr;
-  Triangle* triangles_ = nullptr;
+  Triangle*   triangles_ = nullptr;
+  const window::Texture* texture_ = nullptr;
 };
 
 }

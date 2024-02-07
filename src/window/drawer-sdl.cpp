@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <SDL_render.h>
 
 #include "window/drawer-sdl.h"
 #include "logger/logger.h"
@@ -25,6 +26,8 @@ DrawerSDL::DrawerSDL(SDL_Window* sdl_window)
   // Check if renderer was successfully created
   if (sdl_renderer_ == NULL) 
     throw std::runtime_error(SDL_GetError());
+
+  SDL_RenderSetLogicalSize(sdl_renderer_, 320, 180);
 }
 
 
@@ -117,6 +120,8 @@ auto DrawerSDL::SetDrawFont(const char *name) -> void {
 
 auto DrawerSDL::GetResolution(int *width, int *height) -> void {
   SDL_GetWindowSize(sdl_window_, width, height);
+  *width /= 4;
+  *height /= 4;
 }
 
 
@@ -128,7 +133,7 @@ auto DrawerSDL::GetAspectRatio() -> float
 }
 
 
-auto DrawerSDL::GetTexture(const char *name) -> Texture* {
+auto DrawerSDL::GetTexture(const char *name) -> const Texture* {
   return textures_[name];
 }
 
@@ -170,7 +175,7 @@ auto DrawerSDL::DrawTriangleTextured(
     float u1, float v1,
     float u2, float v2,
     float u3, float v3,
-    Texture *texture) -> void 
+    const Texture *texture) -> void 
 {
   SDL_Vertex verts[] = {
     {{(float)x1, (float)y1}, draw_color_, {u1, v1}},

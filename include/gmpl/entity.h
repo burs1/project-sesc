@@ -13,8 +13,8 @@ class Component;
 
 class Entity {
 friend Scene;
-public:
-  // - Methods -
+ public:
+  // Adds a component of given type.
   template<typename T>
   auto AddComponent() -> T* {
     static_assert(std::is_base_of<Component, T>(), "Given class not derrives from Component class");
@@ -27,18 +27,14 @@ public:
   Transform*& transform;
 
 private:
-  // Contructor
   Entity(Scene*, window::Window*, gfx::Renderer3D*, int);
-
-  // Destructor
   ~Entity();
 
   Transform* transform_;
   std::vector<Component*> components_;
 
-  Scene* const scene_;
-  window::Window* const context_window_;
-  gfx::Renderer3D* const renderer3d_;
+  Scene*           const scene_;
+  
   const int id_;
 };
 

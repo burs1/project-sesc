@@ -39,11 +39,11 @@ Renderer3D::~Renderer3D()
 
 // Methods
 // ~ Resources
-auto Renderer3D::LoadMesh(const char* file, const char* mesh_name) -> void {
+auto Renderer3D::LoadMesh(const char* file, const char* mesh_name) -> void
+{
   // Check if mesh with such name already exists
-  if (meshes_.contains(mesh_name)) {
+  if (meshes_.contains(mesh_name))
     throw std::runtime_error("Mesh with name \"" + std::string(mesh_name) + "\" already exists");
-  }
   meshes_[mesh_name] = new Mesh(file);
 }
 
@@ -55,47 +55,53 @@ auto Renderer3D::UnloadMesh(const char* mesh_name) -> void {
 
 
 // ~ Setters
-auto Renderer3D::SetPerspective(float fov, float near, float far) -> void {
+auto Renderer3D::SetPerspective(float fov, float near, float far) -> void
+{
   float aspect_ratio = drawer_->GetAspectRatio();
   projmat_.SetPerspective(fov, aspect_ratio, near, far);
-  fov_ = fov;
-  near_ = near;
-  far_ = far;
+  camera_.fov = fov;
+  camera_.near = near;
+  camera_.far = far;
 }
 
 
-auto Renderer3D::SetFOV(float fov) -> void {
+auto Renderer3D::SetFOV(float fov) -> void
+{
   float aspect_ratio = drawer_->GetAspectRatio();
-  projmat_.SetPerspective(fov, aspect_ratio, near_, far_);
-  fov_ = fov;
+  projmat_.SetPerspective(fov, aspect_ratio, camera_.near, camera_.far);
+  camera_.fov = fov;
 }
 
 
-auto Renderer3D::SetNearPlane(float near) -> void {
+auto Renderer3D::SetNearPlane(float near) -> void
+{
   float aspect_ratio = drawer_->GetAspectRatio();
-  projmat_.SetPerspective(fov_, aspect_ratio, near, far_);
-  near_ = near;
+  projmat_.SetPerspective(camera_.fov, aspect_ratio, near, camera_.far);
+  near = near;
 }
 
 
-auto Renderer3D::SetFarPlane(float far) -> void {
+auto Renderer3D::SetFarPlane(float far) -> void
+{
   float aspect_ratio = drawer_->GetAspectRatio();
-  projmat_.SetPerspective(fov_, aspect_ratio, near_, far);
-  far_ = far;
+  projmat_.SetPerspective(camera_.fov, aspect_ratio, camera_.near, far);
+  camera_.far = far;
 }
 
 
-auto Renderer3D::SetPlanes(float far, float near) -> void {
+auto Renderer3D::SetPlanes(float far, float near) -> void
+{
   float aspect_ratio = drawer_->GetAspectRatio();
-  projmat_.SetPerspective(fov_, aspect_ratio, near, far);
-  far_ = far;
-  near_ = near;
+  projmat_.SetPerspective(camera_.fov, aspect_ratio, near, far);
+  camera_.far = far;
+  camera_.near = near;
 }
 
 
 auto Renderer3D::SetCameraTransform(const math::Vec3 *pos,
                                     const math::Vec3 *rot) -> void {
-  camera_ = {pos, rot};
+  camera_.pos = pos;
+  camera_.rot = rot;
 }
 
 
@@ -105,8 +111,17 @@ auto Renderer3D::SetSunRotation(const math::Vec3 &dir) -> void {
 }
 
 
+auto Renderer3D::SetSunColor(Uint8 r, Uint8 g, Uint8 b) -> void
+{
+  sun_color_[0] = r;
+  sun_color_[1] = g;
+  sun_color_[2] = b;
+}
+
+
 // ~ Render
-auto Renderer3D::RenderFrame() -> void {
+auto Renderer3D::RenderFrame() -> void
+{
   // Calc view matrix
   CalcViewMatrix();
   std::vector<RawTriangle> triangles_to_draw;
@@ -139,42 +154,25 @@ auto Renderer3D::CalcViewMatrix() -> void
   if (not camera_.pos) {
     math::Vec3 default_pos(0.0f, 0.0f, 0.0f);
     viewmat_.LookAt(
-      default_pos,
-      default_pos + rotmat.Forward(),
-      rotmat.Up());
+      default_pos, default_pos + rotmat.Forward(), rotmat.Up());
   }
-  else {
+  else
     viewmat_.LookAt(
-      *camera_.pos,
-      *camera_.pos + rotmat.Forward(),
-      rotmat.Up());
-  }
-}
-
-
-auto Renderer3D::CalcTransformMatrix(
-    const math::Vec3& pos,
-    const math::Vec3& rot,
-    const math::Vec3& scale) -> math::Matrix4x4
-{
-  math::Matrix4x4 transf_mat;
-  transf_mat.SetTransform(pos, rot, scale);
-  return transf_mat;
+      *camera_.pos, *camera_.pos + rotmat.Forward(), rotmat.Up());
 }
 
 
 auto Renderer3D::ProcessTriangles(
-    const Renderer* render_data,
+    const Renderer* renderer,
     std::vector<RawTriangle>& triangles_to_draw) -> void
 {
-  math::Matrix4x4 transfmat = render_data->GetTransformMatrix();
+  math::Matrix4x4 transfmat = renderer->GetTransformMatrix();
 
   // Copy and transform verts
   int verts_count;
-  math::Vec3* transformed_verts = render_data->GetVerts(&verts_count);
-  for (int i=0; i<verts_count; ++i) {
+  math::Vec3* transformed_verts = renderer->GetVerts(&verts_count);
+  for (int i=0; i<verts_count; ++i)
     transformed_verts[i] *= transfmat;
-  }
 
   // Copy and transform all verts to view basis
   math::Vec3* viewed_verts = new math::Vec3[verts_count];
@@ -183,11 +181,11 @@ auto Renderer3D::ProcessTriangles(
 
   // Copy uv coords (POINTER SHOULDN'T BE DELETED)
   int uv_coords_count;
-  const math::Vec2* uv_coords = render_data->GetUVCoords(&uv_coords_count);
+  const math::Vec2* uv_coords = renderer->GetUVCoords(&uv_coords_count);
   
   // Copy triangles (POINTER SHOULDN'T BE DELETED)
   int triangles_count;
-  const Triangle* triangles = render_data->GetTriangles(&triangles_count);
+  const Triangle* triangles = renderer->GetTriangles(&triangles_count);
 
   // Filter verts
   for (int i=0; i<triangles_count; ++i) {
@@ -206,7 +204,7 @@ auto Renderer3D::ProcessTriangles(
 
     // Calc light
     float lightk = 1.0f;
-    if (not render_data->IsLightIgnored()) {
+    if (not renderer->IsLightIgnored()) {
       normal = math::Vec3::Cross(
           transformed_verts[ verts_ids[1] ] - transformed_verts[ verts_ids[0] ],
           transformed_verts[ verts_ids[2] ] - transformed_verts[ verts_ids[0] ]);
@@ -227,11 +225,11 @@ auto Renderer3D::ProcessTriangles(
           uv_coords[ triangles[i].uv_coords_ids[2] ]
         },
         {
-          int(triangles[i].color[0] * lightk),
-          int(triangles[i].color[1] * lightk),
-          int(triangles[i].color[2] * lightk)
+          int( (triangles[i].color[0] + sun_color_[0]) * lightk ) / 2,
+          int( (triangles[i].color[1] + sun_color_[1]) * lightk ) / 2,
+          int( (triangles[i].color[2] + sun_color_[2]) * lightk ) / 2
         },
-        render_data->GetTexture()
+        renderer->GetTexture()
       }
     );
   }
@@ -374,9 +372,7 @@ auto Renderer3D::ClipTriangleAgainstPlane(
  
    if (inside_count == 0) { return 0; }
  
-   if (inside_count == 3) {
-     out1 = in; return 1;
-   }
+   if (inside_count == 3) { out1 = in; return 1; }
  
    if (inside_count == 1 && outside_count == 2) {
      float t;
@@ -436,3 +432,4 @@ auto Renderer3D::ClipTriangleAgainstPlane(
 }
 
 }
+

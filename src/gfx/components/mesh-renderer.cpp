@@ -2,13 +2,14 @@
 
 namespace eng::gfx {
 
-auto MeshRenderer::SetTexture(window::Texture* new_texture) -> void {
-    texture_ = new_texture;
+auto MeshRenderer::SetTexture(
+    const window::Texture* new_texture) -> void {
+  texture_ = new_texture;
 }
 
 
 auto MeshRenderer::SetMesh(gfx::Mesh* new_mesh) -> void {
-    mesh_ = new_mesh;
+  mesh_ = new_mesh;
 }
 
 
@@ -27,7 +28,7 @@ auto MeshRenderer::GetTriangles(int* triangles_count) const -> const Triangle* {
 }
 
 
-auto MeshRenderer::GetTexture() const -> window::Texture* {
+auto MeshRenderer::GetTexture() const -> const window::Texture* {
   return texture_;
 }
 

@@ -1,4 +1,6 @@
 #include <SDL.h>
+#include <SDL_events.h>
+#include <SDL_mouse.h>
 
 #include "window/input.h"
 
@@ -20,6 +22,10 @@ void Input::Update()
     previous_keyboard_state_[i] = keyboard_state_[i];
   previous_mouse_state_ = mouse_state_;
 
+  // Read current keyboard and mouse states
+  keyboard_state_ = SDL_GetKeyboardState(NULL);
+  mouse_state_ = SDL_GetMouseState(&mousex_, &mousey_);
+
   // Lock cursor at the center of the window and calc mouse delta
   if (is_cursor_locked_) {
     int w, h;
@@ -35,9 +41,8 @@ void Input::Update()
     previous_mousey_ = mousey_;
   }
 
-  // Read current keyboard and mouse states
-  keyboard_state_ = SDL_GetKeyboardState(NULL);
-  mouse_state_ = SDL_GetMouseState(&mousex_, &mousey_);
+  mousex_delta_ = mousex_ - previous_mousex_;
+  mousey_delta_ = mousey_ - previous_mousey_;
 }
 
 
@@ -80,13 +85,15 @@ void Input::GetMousePosition(int *x, int *y) const {
 
 
 void Input::GetMouseDelta(int *x, int *y) const {
-  *x = mousex_ - previous_mousex_;
-  *y = mousey_ - previous_mousey_;
+  *x = mousex_delta_;
+  *y = mousey_delta_;
 }
 
 
 auto Input::SetCursorLock(bool lock) -> void {
   is_cursor_locked_ = lock;
+  SDL_ShowCursor(lock ? SDL_DISABLE : SDL_ENABLE);
+  SDL_SetRelativeMouseMode(lock ? SDL_TRUE : SDL_FALSE);
 }
 
 

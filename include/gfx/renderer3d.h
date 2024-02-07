@@ -23,86 +23,84 @@ namespace eng::gfx {
 
 class Renderer3D {
 friend app::App;
-public:
+ public:
   // ! Not copyable
   Renderer3D(const Renderer3D&) = delete;
-
-
   Renderer3D operator=(const Renderer3D&) = delete;
-
 
   // ! Not movable
   Renderer3D(Renderer3D&&) = delete;
-
-
   Renderer3D& operator=(Renderer3D&&) = delete;
 
-
+  // Loads a file into a Mesh object and inserts it in map
+  // with given name.
   auto LoadMesh(const char*, const char*)                       -> void;
 
-
+  // Unloads mesh object by it's name
   auto UnloadMesh(const char*)                                  -> void;
 
-
+  // Calcs new projection matrix based on passed fov,
+  // near and far plane distance.
   auto SetPerspective(float, float, float)                      -> void;
 
-
+  // Calcs new projection matrix based on passed fov and
+  // current near and far plane distance values.
   auto SetFOV(float)                                            -> void;
 
-
+  // Calcs new projection matrix based on passed near plane distance
+  // and current fov and far plane distance.
   auto SetNearPlane(float)                                      -> void;
 
-
+  // Calcs new projection matrix based on passed far plane distance
+  // and current fov and near plane distance.
   auto SetFarPlane(float)                                       -> void;
 
-
+  // Calcs new projection matrix based on passed far and near
+  // plane distances and current fov.
   auto SetPlanes(float, float)                                  -> void;
 
-
+  // Sets pointers to two vectors that represent position
+  // and rotation of the camera.
   auto SetCameraTransform(const math::Vec3*, const math::Vec3*) -> void;
 
-
+  // Sets sun rotation.
   auto SetSunRotation(const math::Vec3&)                        -> void;
 
-
+  // Sets sun color.
+  auto SetSunColor(Uint8, Uint8, Uint8)                         -> void;
+  
+  // Renders frame.
   auto RenderFrame() -> void;
 
-private:
+ private:
   Renderer3D(window::Drawer*);
-
-
   ~Renderer3D();
 
-
+  // Sets pointer to a map that contains pointers to renderer components.
   auto SetRendererComponentsMap(std::map<int, Renderer*>*) -> void;
 
-
+  // Calcs view matrix based on user passed pointers to pos and rot
+  // of the camera. If pointers weren't set default values will be used.
   auto CalcViewMatrix() -> void;
 
-
-  auto CalcTransformMatrix(
-    const math::Vec3&,
-    const math::Vec3&,
-    const math::Vec3&) -> math::Matrix4x4;
-
-  
+  //
   auto ProcessTriangles(
     const Renderer*,
     std::vector<RawTriangle>&) -> void;
 
-
+  // Sorts triangles by distance to the camera.
   auto SortTriangles(std::vector<RawTriangle>&) -> void;
 
-
+  // Clips, projects and draws triangles.
   auto DrawTriangles(std::vector<RawTriangle>&) -> void;
 
-
+  // Projects triangle verts.
   auto ProjectTriangle(RawTriangle&)            -> void;
 
-
+  // Draws projected triangle.
   auto DrawTriangle(RawTriangle&)               -> void;
 
-
+  // Clips triangle against view frustum.
   auto ClipTriangleAgainstPlane(
     math::Vec3,
     math::Vec3,
@@ -110,7 +108,7 @@ private:
     RawTriangle&,
     RawTriangle&) -> int;
 
-
+  // Finds interection point of view frustum and triangle.
   auto FindPlaneIntersectionPoint(
     math::Vec3,
     math::Vec3,
@@ -118,24 +116,24 @@ private:
     const math::Vec3&,
     float&) -> math::Vec3;
 
-
-  window::Drawer *drawer_;
   gmpl::Scene    *scene_;
+  window::Drawer *drawer_;
   
   struct {
+    float fov = 0.0f, near = 0.0f, far = 0.0f;
+
     const math::Vec3* pos = nullptr;
     const math::Vec3* rot = nullptr;
   } camera_;
+  math::Matrix4x4 projmat_;
+  math::Matrix4x4 viewmat_;
 
   math::Vec3 sun_direction_;
-  float fov_ = 0.0f, near_ = 0.0f, far_ = 0.0f;
+  Uint8 sun_color_[3] = {255, 255, 255};
 
   std::map<const char*, Mesh*> meshes_;
   std::map<int, Renderer*> *renderer_components_;
-
-  std::vector<window::Texture*> rendered_text_;
-  math::Matrix4x4 projmat_;
-  math::Matrix4x4 viewmat_;
 };
 
 }
+

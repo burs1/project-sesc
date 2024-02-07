@@ -1,5 +1,6 @@
 #include <string>
 #include <stdexcept>
+#include <algorithm>
 
 #include "gmpl/scene.h"
 #include "gmpl/entity.h"
@@ -8,7 +9,6 @@
 
 namespace eng::gmpl {
 
-// Constructor
 Scene::Scene(window::Window* context_window,
              gfx::Renderer3D* renderer3d)
   : context_window_(context_window), renderer3d_(renderer3d),
@@ -18,7 +18,6 @@ Scene::Scene(window::Window* context_window,
 }
 
 
-// Destructor
 Scene::~Scene()
 {
   for (auto [id, entity] : entities_)
@@ -31,10 +30,14 @@ Scene::~Scene()
 }
 
 
-// - Methods -
+auto Scene::GetContextWindow() -> window::Window* {
+  return context_window_;
+}
+
+
 auto Scene::UpdateComponents() -> void {
   for (auto [id, component] : dynamic_components_)
-    component->Update();
+    component->OnUpdate();
 }
 
 
@@ -50,16 +53,40 @@ auto Scene::CreateEntity() -> Entity*
 auto Scene::DestroyEntity(Entity* entity) -> void
 {
   for (auto component : entity->components_)
-    DestroyComponent(component);
+    delete component;
   entities_.erase(entity->id_);
   delete entity;
+  // Entity's components vector frees automaticly
 }
 
 
+auto Scene::InitComponent(Component* component, Entity* entity) -> int {
+  int id = GetFreeComponentID();
+  component->Init(this, entity, id);
+  components_[id] = component;
+
+  if (component->IsDynamic())
+    dynamic_components_[id] = component;
+
+  return id;
+}
+
 auto Scene::DestroyComponent(Component* component) -> void {
+  // Erase component from it's entity components vector
+  auto entity = component->entity_;
+  auto component_allocator =
+    std::find(
+      entity->components_.begin(),
+      entity->components_.end(),
+      component);
+  entity->components_.erase(component_allocator);
+
+  // Erase component from vectors
   components_.erase(component->id_);
   dynamic_components_.erase(component->id_);
   renderer_components_.erase(component->id_);
+
+  // Delete component object
   delete component;
 }
 

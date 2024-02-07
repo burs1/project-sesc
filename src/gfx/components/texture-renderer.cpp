@@ -4,7 +4,8 @@
 namespace eng::gfx {
   
 // Methods
-auto TextureRenderer::SetTexture(window::Texture* new_texture) -> void {
+auto TextureRenderer::SetTexture(
+    const window::Texture* new_texture) -> void {
   texture_ = new_texture;
 
   if (verts_) { delete verts_; }
@@ -27,19 +28,21 @@ auto TextureRenderer::GetVerts(int* verts_count) const -> math::Vec3* {
 }
 
 
-auto TextureRenderer::GetUVCoords(int* uv_coords_count) const -> const math::Vec2* {
+auto TextureRenderer::GetUVCoords(
+    int* uv_coords_count) const -> const math::Vec2* {
   *uv_coords_count = 4;
   return uv_coords_;
 }
 
 
-auto TextureRenderer::GetTriangles(int* triangles_count) const -> const Triangle* {
+auto TextureRenderer::GetTriangles(
+    int* triangles_count) const -> const Triangle* {
   *triangles_count = 2;
   return triangles_;
 }
 
 
-auto TextureRenderer::GetTexture() const -> window::Texture* {
+auto TextureRenderer::GetTexture() const -> const window::Texture* {
   return texture_;
 }
 
@@ -56,7 +59,6 @@ auto TextureRenderer::OnCreate() -> void {
     Triangle{{0, 1, 2}, {0, 1, 2}, {255, 255, 255}},
     Triangle{{0, 2, 3}, {0, 2, 3}, {255, 255, 255}}
   };
-
 }
 
 

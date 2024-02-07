@@ -10,7 +10,7 @@ struct RawTriangle {
   math::Vec3 verts[3];
   math::Vec2 uv_coords[3];
   int color[3];
-  window::Texture* texture;
+  const window::Texture* texture;
 };
 
 }

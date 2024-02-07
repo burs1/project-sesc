@@ -12,9 +12,19 @@
 
 class Rotator : public eng::gmpl::Behaviour {
 private:
+  auto OnCreate() -> void override {
+    entity->transform->SetRotation( eng::math::Vec3(0.1f, 0.0f, 0.1f) );
+    SetCursorLock(true);
+  }
+
   auto OnUpdate() -> void override {
-    entity->transform->Rotate( eng::math::Vec3(0.0f, 0.01f, 0.0f) );
-    entity->transform->Translate( eng::math::Vec3(0.0f, 0.0f, -0.1f) );
+    int dx = 0, dy;
+    GetMouseDelta(&dx, &dy);
+
+    if (IsMouseButtonPressed(1))
+      SetCursorLock(false);
+
+    entity->transform->Rotate( eng::math::Vec3(0.0f, -dx * 0.005f, 0.0f) );
   }
 };
 
@@ -40,18 +50,23 @@ App::App(const char* assets_dir) {
 
   // ------- DEBUG -----------
   auto e = scene_->CreateEntity();
-  e->AddComponent<gfx::MeshRenderer>()->SetMesh( renderer3d_->meshes_["cube"] );
-  e->transform->SetPosition(math::Vec3(0.0f, 0.0f, 100.0f));
+  auto cmp = e->AddComponent<gfx::MeshRenderer>();
+  cmp->SetMesh( renderer3d_->meshes_["pc"] );
+  cmp->SetTexture( window_->drawer_->GetTexture("pc") );
+  e->transform->SetPosition(math::Vec3(0.0f, 0.0f, 4.0f));
   e->AddComponent<Rotator>();
 
-  window_->drawer_->SetClearColor(25, 25, 25);
+  window_->drawer_->SetClearColor(212, 156, 25);
+
+  renderer3d_->SetSunRotation(math::Vec3(3.0f, 0.0f, 0.0f));
+  renderer3d_->SetSunColor(212, 156, 25);
   // -------------------------
 
   MainLoop();
 }
 
 App::~App() {
-  OnAsleep();
+  OnFall();
 
   // Deinitialise main engine systems
   delete scene_;
@@ -92,7 +107,8 @@ auto App::LoadAssets(const char* assets_dir) -> void {
   log::Info("Loading assets from \"" + std::string(assets_dir) + "\"");
 
   // do some cool stuff...
-  renderer3d_->LoadMesh("assets/models/cube.obj", "cube");
+  renderer3d_->LoadMesh("assets/models/pc.obj", "pc");
+  window_->drawer_->LoadTexture("assets/sprites/pc.png", "pc");
 
   log::Info("Assets loaded successfuly");
 }

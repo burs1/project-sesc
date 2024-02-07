@@ -11,7 +11,6 @@ public:
 
   Matrix4x4(const Matrix4x4&);
 
-  // methods
   auto SetIdentity()                   -> void;
 
   auto SetTranslation(const Vec3&)     -> void;
@@ -42,19 +41,17 @@ public:
 
   auto Inverse() -> void;
 
-  // operators
   auto operator*=(const Matrix4x4&)       -> void;
   
   auto operator*(const Matrix4x4&)  const -> Matrix4x4;
 
   auto operator=(const Matrix4x4&)        -> void;
 
-  // vars
   float m[4][4];
 
 private:
-  // internal methods
-  auto _copy(const Matrix4x4&) -> void;
+  auto Copy(const Matrix4x4&) -> void;
 };
 
 }
+

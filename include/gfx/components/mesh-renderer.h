@@ -11,10 +11,11 @@ class Scene;
 
 class MeshRenderer : public Renderer {
 friend Scene;
-public:
-  // - Methods -
-  auto SetTexture(window::Texture*) -> void;
+ public:
+  // Sets renderer texture to a given.
+  auto SetTexture(const window::Texture*) -> void;
 
+  // Sets mesh texture to a given.
   auto SetMesh(gfx::Mesh*)          -> void;
 
   auto GetVerts(int*)     const -> math::Vec3* override;
@@ -23,13 +24,12 @@ public:
 
   auto GetTriangles(int*) const -> const Triangle* override;
 
-  auto GetTexture()       const -> window::Texture* override;
+  auto GetTexture()       const -> const window::Texture* override;
 
-
-private:
+ private:
   const Mesh* mesh_ = nullptr;
-  window::Texture* texture_ = nullptr;
-
+  const window::Texture* texture_ = nullptr;
 };
 
 }
+
