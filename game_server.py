@@ -94,11 +94,11 @@ class GameServer:
 		try:
 			if message['flag'] == 'misc':
 				if message['subflag'] == 'ping':
-					responce = (200, (str(time.time()),))
+					responce = (200, (time.time(),))
 				elif message['subflag'] == 'registration':
 					responce = self.reg_user(args = message['args'], sender_id = sender_id)
 		except Exception as e:
-			responce = (400, ("Wrong arguments", str(e)))
+			responce = (400, ("Wrong arguments", f"debug: {e}"))
 
 		responce = tools.compose_responce(status_code=responce[0],
 											flag=message['flag'],
@@ -127,4 +127,9 @@ class GameServer:
 		""" Stops server """
 
 		self.websocket_server.stop_server()
+
+
+if __name__ == "__main__":
+	serv = GameServer()
+	serv.websocket_server.join()
 

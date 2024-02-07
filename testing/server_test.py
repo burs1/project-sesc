@@ -1,7 +1,7 @@
 
 import pytest
 
-@pytest.mark.parametrize("amount_of_connections", [1])
+@pytest.mark.parametrize("amount_of_connections", [1, 3, 5, 1000])
 def test_registration(amount_of_connections:int, gen_nickname_fixture,
 					create_server_fixture, gen_connections_fixture,
 					gen_register_message_fixture, load_server_config_fixture):

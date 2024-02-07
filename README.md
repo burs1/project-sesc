@@ -56,6 +56,12 @@
 -	`disconnect_from_session`:
 	-	Responses:
 		-	`[only status code]`
+#### `game` (subflags):
+-	`data_exchange`:
+	-	Args: `{any data}`
+	-	Responses:
+		-	Susscess:
+			- `{string:some_system_info}/{int:amount_of_incoming_players_data}/{...data for each player...}`
 
 
 

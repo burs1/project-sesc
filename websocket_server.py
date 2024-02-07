@@ -163,7 +163,6 @@ def start_server(host, port, use_ssl = False, ssl_certfile = None, ssl_keyfile =
 		server = WsServer(host, port, msg_handler=msg_handler)
 
 	server.start()
-	print('udfg')
 	return server
 
 	#asyncio.run(server.serve())
@@ -176,5 +175,5 @@ def start_server(host, port, use_ssl = False, ssl_certfile = None, ssl_keyfile =
 
 #Testing
 
-if __name__ == "__main__":
-	start_server(**tools.load_server_config()) #asyncio.run(WsServer("127.0.0.1", "43758").serve())
+#if __name__ == "__main__":
+#	start_server(**tools.load_server_config()) #asyncio.run(WsServer("127.0.0.1", "43758").serve())

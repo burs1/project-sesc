@@ -1,0 +1,7 @@
+__pycache__
+manual_server_test.py
+*.crt
+*.key
+*.pem
+server_config.json
+datamodel.py
