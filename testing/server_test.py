@@ -51,12 +51,13 @@ def test_sessions(amount_of_sessions:int, connections_per_session:int,
 
 	main_connection = gen_connections_fixture(1, host=config['host'], port=config['port'])[0]
 	sessions = {} # {session_id:[active_connections]}
+	password = gen_randhash_fixture(8)
 
 	LOGGER.info("Sessions creation")
 
 	for i in range(amount_of_sessions):
 		session_name = gen_randhash_fixture()
-		main_connection.send(gen_session_create_message_fixture(session_name, connections_per_session, ''))
+		main_connection.send(gen_session_create_message_fixture(session_name, connections_per_session, password))
 		res = main_connection.recv().split('/')
 		# print(res)
 
@@ -94,7 +95,11 @@ def test_sessions(amount_of_sessions:int, connections_per_session:int,
 			print(res)
 			assert res[0] == '1'
 
-			conn.send(gen_connect_to_session_message_fixture(session_id))
+			conn.send(gen_connect_to_session_message_fixture(session_id, 'wrong_password'))
+			res = conn.recv().split('/')
+			assert res[0] == '0'
+
+			conn.send(gen_connect_to_session_message_fixture(session_id, password))
 			res = conn.recv().split('/')
 			print(res)
 			assert res[0] == '1'

@@ -199,8 +199,13 @@ class GameServer:
 		if args[0] not in self.sessions.keys():
 			return (0, ("There is not session with such id",))
 
+		if self.sessions[args[0]].password_required:
+			if len(args) == 1 or args[1] != self.sessions[args[0]].password:
+				return (0, ("Wrong password",))
+
 		if not self.sessions[args[0]].connect_player(self.players[sender_id]):
 			return (0, ("Session overflow",))
+
 
 		return (1, tuple())
 

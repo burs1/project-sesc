@@ -63,7 +63,7 @@ def gen_session_create_message_fixture():
 
 @pytest.fixture(scope='function')
 def gen_get_sessions_list_message_fixture():
-	def _gen_get_sessions_list_message_fixture():
+	def _gen_get_sessions_list_message_fixture() -> str:
 		return f'misc/get_sessions_list'
 
 	return _gen_get_sessions_list_message_fixture
@@ -71,8 +71,8 @@ def gen_get_sessions_list_message_fixture():
 
 @pytest.fixture(scope='function')
 def gen_connect_to_session_message_fixture():
-	def _gen_connect_to_session_message_fixture(session_id:str):
-		return f'misc/connect_to_session/{session_id}'
+	def _gen_connect_to_session_message_fixture(session_id:str, password:str) -> str:
+		return f'misc/connect_to_session/{session_id}/{password}'
 
 	return _gen_connect_to_session_message_fixture
 

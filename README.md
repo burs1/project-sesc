@@ -46,7 +46,7 @@
 		-	Failure:
 			-	`{string:reason}`
 -	`connect_to_session`:
-	-	Args: `{string:internal_session_id}`
+	-	Args: `{string:internal_session_id}/{string:password [optional argument for no password]}`
 	-	Responses:
 		-	Success:
 			-	`[only status code] [you may begin sending game data]`
