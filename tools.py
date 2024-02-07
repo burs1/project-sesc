@@ -32,5 +32,5 @@ def decompose_request(message:str) -> dict:
 	return {'flag':message[0], 'subflag':message[1], "args":message[2::]}
 
 
-def compose_responce(status_code:int, flag:str, subflag:str, args:tuple) -> str:
-	return f'{status_code}/{flag}/{subflag}/{"|".join(tuple(map(str, args)))}'
+def compose_response(status_code:int, flag:str, subflag:str, args:tuple) -> str:
+	return f'{status_code}/{flag}/{subflag}/{"/".join(tuple(map(str, args)))}'

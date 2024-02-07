@@ -1,6 +1,6 @@
 {
 	"HOST":"localhost",
-	"PORT":43758,
+	"PORT":7899,
 	"use_ssl":false,
 	"ssl_certfile":"proj_sesc_crt.pem",
 	"ssl_keyfile":"proj_sesc_key.pem"

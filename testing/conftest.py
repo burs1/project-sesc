@@ -18,11 +18,11 @@ def load_server_config_fixture():
 
 
 @pytest.fixture(scope="function")
-def gen_nickname_fixture():
-	def _gen_nickname_fixture() -> str:
-		return hashlib.shake_256(bytes(random.randint(1, 1<<6))).hexdigest(5)
+def gen_randhash_fixture():
+	def _gen_randhash_fixture(size:int = 12) -> str:
+		return hashlib.shake_256(f'{random.randint(1, 1<<63)}'.encode()).hexdigest(size)
 
-	return _gen_nickname_fixture
+	return _gen_randhash_fixture
 
 
 @pytest.fixture(scope='function')
@@ -51,3 +51,31 @@ def gen_register_message_fixture():
 		return f'misc/registration/{nickname}'
 
 	return _gen_register_message_fixture
+
+
+@pytest.fixture(scope='function')
+def gen_session_create_message_fixture():
+	def _gen_session_create_message_fixture(session_name:str, max_players:int, password:str) -> str:
+		return f'misc/create_session/{session_name}/{max_players}/{password}'
+
+	return _gen_session_create_message_fixture
+
+
+@pytest.fixture(scope='function')
+def gen_get_sessions_list_message_fixture():
+	def _gen_get_sessions_list_message_fixture():
+		return f'misc/get_sessions_list'
+
+	return _gen_get_sessions_list_message_fixture
+
+
+@pytest.fixture(scope='function')
+def gen_connect_to_session_message_fixture():
+	def _gen_connect_to_session_message_fixture(session_id:str):
+		return f'misc/connect_to_session/{session_id}'
+
+	return _gen_connect_to_session_message_fixture
+
+@pytest.fixture(scope='function')
+def gen_disconnect_from_session_message_fixture():
+	return 'misc/disconnect_from_session'

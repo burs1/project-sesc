@@ -6,6 +6,7 @@
 ### Requests structure:
 `{flag}/{subflag}/*all_other_data_from_responces`
 *`example`: `misc/registration/my nickname/`*
+`type "bool" is considered to be as 0 or 1 integer`
 
 
 ### Responce status codes:
@@ -18,7 +19,7 @@
 ### Responses structure:
 `{int:status_code}/{flag}/{subflag}/*all_other_data_from_responces`
 *braces define insertion, it is not a part of request, same as "data_type:"*
-*`example`: `1/misc/create_session/6fe3110cca4/`*
+*`example`: `1/misc/create_session/95db522b74f4ad8859526713/`*
 
 
 
@@ -36,9 +37,9 @@
 			-	`{string:reason}`
 -	`get_sessions_list`:
 	-	Responses:
-		-	sessions_list: `{int:amount_of_sessions}/{string:session_name|string:internal_session_id|int:amount_of_players|int:max_players|bool:password_required}/{...}`
+		-	sessions_list: `{int:amount_of_sessions}/{string:session_name}/{string:internal_session_id}/{int:amount_of_players}/{int:max_players}/{bool:password_required}/{...}`
 -	`create_session`:
-	-	Args: `{string:session_name|int:max_players|string:session_password [leave empty for no password]}`
+	-	Args: `{string:session_name}/{int:max_players}/{string:session_password [pass empty string for no password]}`
 	-	Responses:
 		-	Success:
 			-	`{string:internal_session_id}`
