@@ -6,7 +6,7 @@
 ### Requests structure:
 `{flag}/{subflag}/*all_other_data_from_responces`
 *`example`: `misc/registration/my nickname/`*
-`type "bool" is considered to be as 0 or 1 integer`
+*type "bool" is considered to be as 0 or 1 integer*
 
 
 ### Responce status codes:

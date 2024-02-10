@@ -3,3 +3,6 @@
 resource
 websockets
 websocket-client
+
+# For testing folder
+pytest
