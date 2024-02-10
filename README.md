@@ -58,11 +58,19 @@
 	-	Responses:
 		-	`[only status code]`
 #### `game` (subflags):
--	`data_exchange`:
+-	`data_exchange`: *Send your player's data using this subflag, you'll get other players data*
 	-	Args: `{any data}`
 	-	Responses:
 		-	Susscess:
-			- `{string:some_system_info}/{int:amount_of_incoming_players_data}/{...data for each player...}`
+			- `{int:amount_of_incoming_players_data}/{...data for each player...}`
+		- Failure:
+			- `{string: reason}`
+-	`get_players_data`:
+	- Responses:
+		- Success:
+			- `{int:amount_of_incoming_players_data}/{...data for each player...}`
+		- Failure:
+			- `{string: reason}`
 
 
 

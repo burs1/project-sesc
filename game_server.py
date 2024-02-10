@@ -10,7 +10,8 @@ import websocket_server as ws_server_lib
 
 
 class Player:
-	def __init__(self, connection_instance:ws_server_lib.UserConn, nickname:str):
+	def __init__(self, connection_instance:ws_server_lib.UserConn, nickname:str,
+						inactivity_timeout:int = 5):
 		"""
 			connection_instance:UserConn
 		"""
@@ -21,15 +22,24 @@ class Player:
 		self.nickname = nickname
 
 		self.last_package_time = time.time()
+		self.inactivity_timeout:int = inactivity_timeout # Inactivity time limit in seconds
 		self.session_id = None
 
+		self.game_data = []
 
-	async def game_data_handler(self, message:str) -> None:
+
+	def game_data_handler(self, data:list) -> None:
 		"""
 			Processes incoming game data
 		"""
 
-		pass
+		self.game_data = data
+		return
+
+
+	def check_inactivity_timeout(self) -> bool:
+		""" Checks if inactivity limit exceeded """
+		return time.time() - self.last_package_time > self.inactivity_timeout
 
 	'''
 	async def update_players_data(self):
@@ -55,13 +65,41 @@ class Session:
 
 		self.connected_players = {}
 
+		self._game_handlers = {"data_exchange":self.__data_exchange,
+								"get_players_data":self.__get_players_data}
 
 
-	def get_players_data(self) -> dict:
+
+	def __get_players_data(self) -> dict:
 		""" Collects all players game data
 			Struct:
 				{"ident":{data}}
 		"""
+
+		output = [len(self.connected_players)]
+		for ident, player in self.connected_players.items():
+			output += player.game_data
+
+		return (1, tuple(output))
+
+
+	def __data_exchange(self, args:list, sender_id):
+		""" Recieving player's data and answering with all other's """
+
+		self.connected_players[sender_id].game_data_handler(data = args)
+		return self.__get_players_data()
+
+
+	def process_player_request(self, message:dict, sender_id) -> tuple[int, tuple]:
+		""" Handles 'game' request from player connected to this session """
+
+		if message['subflag'] not in self._game_handlers.keys():
+			return (400, ("Wrong subflag",))
+
+		self.connected_players[sender_id].last_package_time = time.time()
+
+		return self._game_handlers[message['subflag']](args = message['args'],
+														sender_id = sender_id)
 
 
 	def connect_player(self, player:Player) -> bool:
@@ -83,6 +121,7 @@ class Session:
 		player.session_id = None
 
 
+
 class GameServer:
 	def __init__(self, config = tools.load_server_config()):
 		"""
@@ -98,7 +137,7 @@ class GameServer:
 		self.sessions = {}
 		self.players = {}
 
-		self.misc_handlers = {'ping':self.__ping, 'registration':self.__registration,
+		self._misc_handlers = {'ping':self.__ping, 'registration':self.__registration,
 						'get_sessions_list':self.__get_sessions_list,
 						'create_session':self.__create_session, 'connect_to_session':self.__connect_to_session,
 						'disconnect_from_session':self.__disconnect_from_session}
@@ -107,7 +146,7 @@ class GameServer:
 	async def message_handler(self, message:str, sender_id:str) -> None:
 		""" Decodes incoming data and process misc reqs """
 
-		message = tools.decompose_request(message)
+		message:dict = tools.decompose_request(message)
 
 		if sender_id in self.players:
 			self.players[sender_id].last_package_time = time.time()
@@ -117,12 +156,12 @@ class GameServer:
 		try:
 			if message['flag'] == 'misc':
 				# if message['subflag'] == 'ping':
-				response = self.misc_handlers.get(message['subflag'], self.__wrong_subflag)(args = message['args'],
+				response = self._misc_handlers.get(message['subflag'], self.__wrong_subflag)(args = message['args'],
 																							sender_id = sender_id)
 				# elif message['subflag'] == 'registration':
 				# 	response = self.__registration(args = message['args'], sender_id = sender_id)
 			elif message['flag'] == 'game':
-				pass
+				response = self.game_data_handler(message = message, sender_id = sender_id)
 		except Exception as e:
 			response = (400, ("Wrong arguments", f"debug: {e}"))
 
@@ -190,7 +229,7 @@ class GameServer:
 	def __connect_to_session(self, args:list, sender_id) -> tuple[int, tuple]:
 		""" Connect player to session """
 
-		if sender_id not in self.players:
+		if sender_id not in self.players.keys():
 			return (0, ("You are not registered",))
 
 		if self.players[sender_id].session_id is not None:
@@ -212,7 +251,7 @@ class GameServer:
 	def __disconnect_from_session(self, args:list, sender_id) -> tuple[int, tuple]:
 		""" Disconnect player from session """
 
-		if sender_id not in self.players:
+		if sender_id not in self.players.keys():
 			return (0, ("You are not registered",))
 
 		if self.players[sender_id].session_id is None:
@@ -220,6 +259,18 @@ class GameServer:
 
 		self.sessions[self.players[sender_id].session_id].disconnect_player(self.players[sender_id])
 		return (1, tuple())
+
+
+	def __game_data_handler(self, message:dict, sender_id) -> tuple[int, tuple]:
+		""" Redirecting and processing data with 'game' flag """
+
+		if sender_id not in self.players.keys():
+			return (0, ("You are not registered",))
+
+		if self.players[sender_id].session_id is None:
+			return (0, ("You are not connected to session",))
+
+		return self.sessions[self.players[sender_id].session_id].process_player_request(message, sender_id)
 
 
 
