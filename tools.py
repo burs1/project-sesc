@@ -4,10 +4,14 @@ import json
 import random
 import hashlib
 
-def gen_random_id(length = 32):
+def gen_random_id(length = 32) -> str:
 	""" Generates random hash for temporary UserConn id """
 
 	return hashlib.shake_256(f'{random.randint(1, 1<<256)}'.encode('utf-8')).hexdigest(length)
+
+
+def gen_randhash(size:int = 12) -> str:
+		return hashlib.shake_256(f'{random.randint(1, 1<<63)}'.encode()).hexdigest(size)
 
 
 def load_server_config(filename:str = 'server_config.json') -> dict:

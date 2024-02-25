@@ -1,4 +1,5 @@
 
+import time
 import tools
 import pytest
 import random
@@ -19,10 +20,7 @@ def load_server_config_fixture():
 
 @pytest.fixture(scope="function")
 def gen_randhash_fixture():
-	def _gen_randhash_fixture(size:int = 12) -> str:
-		return hashlib.shake_256(f'{random.randint(1, 1<<63)}'.encode()).hexdigest(size)
-
-	return _gen_randhash_fixture
+	return tools.gen_randhash
 
 
 @pytest.fixture(scope='function')
@@ -38,7 +36,11 @@ def gen_connections_fixture():
 	def _gen_connections_fixture(amount:int, host, port) -> list:
 		connections = [websocket.WebSocket() for i in range(amount)]
 		for conn in connections:
-			conn.connect(f'ws://{host}:{port}')
+			try:
+				conn.connect(f'ws://{host}:{port}')
+			except Exception:
+				time.sleep(0.5)
+				conn.connect(f'ws://{host}:{port}')
 
 		return connections
 
@@ -76,6 +78,33 @@ def gen_connect_to_session_message_fixture():
 
 	return _gen_connect_to_session_message_fixture
 
-@pytest.fixture(scope='function')
+
+@pytest.fixture(scope = 'session')
 def gen_disconnect_from_session_message_fixture():
 	return 'misc/disconnect_from_session'
+
+
+@pytest.fixture()
+def gen_player_data_fixture():
+	def _gen_player_data_fixture(prefix_ident:str) -> str:
+		return f'{prefix_ident}:{tools.gen_randhash(24)}'
+
+	return _gen_player_data_fixture
+
+
+@pytest.fixture()
+def gen_data_exchange_message_fixture():
+	def _gen_data_exchange_message_fixture(game_data:str) -> str:
+		return f'game/data_exchange/{game_data}'
+
+	return _gen_data_exchange_message_fixture
+
+
+@pytest.fixture()
+def decompose_response_fixture():
+	def _decompose_response_fixture(response:str) -> dict:
+		response = response.split('/')
+		return {'status_code':int(response[0]), 'flag':response[1],
+				'subflag':response[2], 'args':response[3::]}
+
+	return _decompose_response_fixture

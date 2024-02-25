@@ -70,7 +70,7 @@ class Session:
 
 
 
-	def __get_players_data(self) -> dict:
+	def __get_players_data(self, args:list = [], sender_id = None) -> dict:
 		""" Collects all players game data
 			Struct:
 				{"ident":{data}}
@@ -161,7 +161,7 @@ class GameServer:
 				# elif message['subflag'] == 'registration':
 				# 	response = self.__registration(args = message['args'], sender_id = sender_id)
 			elif message['flag'] == 'game':
-				response = self.game_data_handler(message = message, sender_id = sender_id)
+				response = self.__game_data_handler(message = message, sender_id = sender_id)
 		except Exception as e:
 			response = (400, ("Wrong arguments", f"debug: {e}"))
 
@@ -223,6 +223,8 @@ class GameServer:
 
 		self.sessions[session_id] = new_session
 
+		# print(session_id, self.sessions.keys())
+
 		return (1, (session_id,))
 
 
@@ -235,6 +237,7 @@ class GameServer:
 		if self.players[sender_id].session_id is not None:
 			return (0, ("You are already connected to session with id",))
 
+		# print(args, self.sessions.keys())
 		if args[0] not in self.sessions.keys():
 			return (0, ("There is not session with such id",))
 
