@@ -108,3 +108,12 @@ def decompose_response_fixture():
 				'subflag':response[2], 'args':response[3::]}
 
 	return _decompose_response_fixture
+
+
+@pytest.fixture(scope = 'function')
+def close_connections_fixture():
+	def _close_connections_fixture(connections) -> None:
+		for conn in connections:
+			conn.close()
+
+	return _close_connections_fixture

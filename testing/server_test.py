@@ -8,7 +8,8 @@ LOGGER = logging.getLogger(__name__)
 @pytest.mark.parametrize("amount_of_connections", [1, 3, 5])#, 100, 500])
 def test_registration(amount_of_connections:int, gen_randhash_fixture,
 					create_server_fixture, gen_connections_fixture,
-					gen_register_message_fixture, load_server_config_fixture):
+					gen_register_message_fixture, load_server_config_fixture,
+					close_connections_fixture):
 	config = load_server_config_fixture
 
 	server = create_server_fixture(config)
@@ -34,6 +35,7 @@ def test_registration(amount_of_connections:int, gen_randhash_fixture,
 		assert ident in server.players
 		assert server.players[ident].nickname == nick
 
+	close_connections_fixture(connections.values())
 	server.stop()
 
 	#assert gen_randhash_fixture == gen_randhash_fixture
@@ -44,7 +46,8 @@ def test_sessions(amount_of_sessions:int, connections_per_session:int,
 				gen_connections_fixture, gen_register_message_fixture,
 				load_server_config_fixture, gen_session_create_message_fixture,
 				gen_get_sessions_list_message_fixture, gen_connect_to_session_message_fixture,
-				gen_disconnect_from_session_message_fixture):
+				gen_disconnect_from_session_message_fixture,
+				close_connections_fixture):
 
 	config = load_server_config_fixture
 	server = create_server_fixture(config)
@@ -123,6 +126,7 @@ def test_sessions(amount_of_sessions:int, connections_per_session:int,
 	for x, instance in server.sessions.items():
 		assert len(instance.connected_players.keys()) == 0
 
+	close_connections_fixture(connections.values())
 	server.stop()
 
 	# for i in range(amount_of_sessions):
@@ -138,7 +142,8 @@ def test_data_exchange(amount_of_connections:int,
 				load_server_config_fixture, gen_session_create_message_fixture,
 				gen_get_sessions_list_message_fixture, gen_connect_to_session_message_fixture,
 				gen_disconnect_from_session_message_fixture, decompose_response_fixture,
-				gen_player_data_fixture, gen_data_exchange_message_fixture):
+				gen_player_data_fixture, gen_data_exchange_message_fixture,
+				close_connections_fixture):
 
 	config = load_server_config_fixture
 	server = create_server_fixture(config)
@@ -204,4 +209,5 @@ def test_data_exchange(amount_of_connections:int,
 	for ident, info in data.items():
 		assert info in res['args']
 
+	close_connections_fixture(connections.values())
 	server.stop()
