@@ -1,4 +1,5 @@
 #include <cmath>
+#include <numbers>
 #include "math/matrix4x4.h"
 
 namespace eng::math {
@@ -52,6 +53,7 @@ auto Matrix4x4::SetRotation(const Vec3& v) -> void
 
 auto Matrix4x4::SetRotationX(float rot) -> void
 {
+  rot *= std::numbers::pi * 2;
   SetIdentity();
   m[0][0] = 1.0f;
   m[1][1] = cosf(rot);
@@ -64,6 +66,7 @@ auto Matrix4x4::SetRotationX(float rot) -> void
 
 auto Matrix4x4::SetRotationY(float rot) -> void
 {
+  rot *= std::numbers::pi * 2;
   SetIdentity();
   m[0][0] = cosf(rot);
   m[0][2] = -sinf(rot);
@@ -76,6 +79,7 @@ auto Matrix4x4::SetRotationY(float rot) -> void
 
 auto Matrix4x4::SetRotationZ(float rot) -> void
 {
+  rot *= std::numbers::pi * 2;
   SetIdentity();
   m[0][0] = cosf(rot);
   m[0][1] = sinf(rot);

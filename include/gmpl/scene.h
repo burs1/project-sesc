@@ -26,16 +26,16 @@ class Scene {
 friend app::App;
  public:
   // Returns a pointer to a context window.
-  auto GetContextWindow()     -> window::Window*;
+  auto GetContextWindow()      -> window::Window*;
 
   // Updates all dynamic components in the scene.
-  auto UpdateComponents()     -> void;
+  auto UpdateComponents(float) -> void;
 
   // Creates an entity instance and returns a pointer to it.
-  auto CreateEntity()         -> Entity*;
+  auto CreateEntity()          -> Entity*;
 
   // Destroys an entity instance.
-  auto DestroyEntity(Entity*) -> void;
+  auto DestroyEntity(Entity*)  -> void;
 
   // Creates a component instance and returns a pointer to it.
   template<typename T>

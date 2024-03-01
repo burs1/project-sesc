@@ -19,12 +19,19 @@ auto TextureRenderer::SetTexture(
     math::Vec3(width / 2.0f, -height / 2.0f, 0.0f),
     math::Vec3(-width / 2.0f, -height / 2.0f, 0.0f),
   };
+
+  normals_ = new math::Vec3[]{
+    math::Vec3::Cross(verts_[1] - verts_[0], verts_[2] - verts_[0]),
+    math::Vec3::Cross(verts_[2] - verts_[3], verts_[2] - verts_[1]),
+  };
 }
 
 
 auto TextureRenderer::GetVerts(int* verts_count) const -> math::Vec3* {
   *verts_count = 4;
-  return verts_;
+  math::Vec3 *arr = new math::Vec3[4];
+  std::copy(verts_, verts_ + 4, arr);
+  return arr;
 }
 
 
@@ -32,6 +39,14 @@ auto TextureRenderer::GetUVCoords(
     int* uv_coords_count) const -> const math::Vec2* {
   *uv_coords_count = 4;
   return uv_coords_;
+}
+
+
+auto TextureRenderer::GetNormals(int *normals_count) const -> math::Vec3* {
+  *normals_count = 2;
+  math::Vec3 *arr = new math::Vec3[2];
+  std::copy(normals_, normals_ + 2, arr);
+  return arr;
 }
 
 
@@ -56,15 +71,16 @@ auto TextureRenderer::OnCreate() -> void {
   };
 
   triangles_ = new Triangle[]{
-    Triangle{{0, 1, 2}, {0, 1, 2}, {255, 255, 255}},
-    Triangle{{0, 2, 3}, {0, 2, 3}, {255, 255, 255}}
+    Triangle{{0, 1, 2}, {0, 1, 2}, 0, {255, 255, 255}},
+    Triangle{{0, 2, 3}, {0, 2, 3}, 1, {255, 255, 255}}
   };
 }
 
 
 auto TextureRenderer::OnDestroy() -> void {
-  if (verts_) { delete verts_; }
+  delete [] verts_;
   delete [] uv_coords_;
+  delete [] normals_;
   delete [] triangles_;
 }
 

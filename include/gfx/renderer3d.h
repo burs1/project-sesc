@@ -2,6 +2,7 @@
 
 #include <map>
 #include <vector>
+#include <string>
 
 #include "gfx/mesh.h"
 #include "gfx/components/renderer.h"
@@ -32,12 +33,15 @@ friend app::App;
   Renderer3D(Renderer3D&&) = delete;
   Renderer3D& operator=(Renderer3D&&) = delete;
 
-  // Loads a file into a Mesh object and inserts it in map
+  // Loads a file into a Mesh object and inserts it in map.
   // with given name.
-  auto LoadMesh(const char*, const char*)                       -> void;
+  auto LoadMesh(std::string, std::string)                       -> void;
 
-  // Unloads mesh object by it's name
-  auto UnloadMesh(const char*)                                  -> void;
+  // Unloads mesh object by it's name.
+  auto UnloadMesh(std::string)                                  -> void;
+
+  // Returns mesh by it's name.
+  auto GetMesh(std::string)                                     -> Mesh*;
 
   // Calcs new projection matrix based on passed fov,
   // near and far plane distance.
@@ -127,11 +131,12 @@ friend app::App;
   } camera_;
   math::Matrix4x4 projmat_;
   math::Matrix4x4 viewmat_;
+  math::Matrix4x4 view_rotmat_;
 
   math::Vec3 sun_direction_;
   Uint8 sun_color_[3] = {255, 255, 255};
 
-  std::map<const char*, Mesh*> meshes_;
+  std::map<std::string, Mesh*> meshes_;
   std::map<int, Renderer*> *renderer_components_;
 };
 

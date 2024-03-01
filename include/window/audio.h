@@ -26,28 +26,28 @@ friend Window;
                             const math::Vec3*) -> void;
 
   // Loads a file into a Sound object.
-  auto LoadSound(const char *file, const char *name) -> void;
+  auto LoadSound(std::string file, std::string name) -> void;
 
   // Unloads a Sound object by it's name.
-  auto UnloadSound(const char*)                      -> void;
+  auto UnloadSound(std::string)                      -> void;
 
   // Plays a sound from the Sound object specified by it's name.
   // Volume, pan and pitch of the played sound can be specified.
-  auto PlaySound(const char*, float volume=1.0f,
+  auto PlaySound(std::string, float volume=1.0f,
                  float pan=0.0f, float pitch=1.0f)   -> void;
 
   // Plays a sound from the Sound object specified by it's name
   // automaticly scaling it's pan and volume depending on
   // sound position, sound range, listener position and 
   // listener rotation.
-  auto PlaySound3D(const char*, math::Vec3,
+  auto PlaySound3D(std::string, math::Vec3,
                    float range, float volume=1.0f)   -> void;
 
  private:
   Audio();
   ~Audio();
 
-  std::map<const char*, Mix_Chunk*> sounds_;
+  std::map<std::string, Mix_Chunk*> sounds_;
 
   struct {
     const math::Vec3 *pos;

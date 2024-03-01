@@ -25,16 +25,27 @@ friend Renderer3D;
  private:
   // Returns a copy of entitiy's transform matrix.
   auto GetTransformMatrix()       const -> math::Matrix4x4;
+  
+  // Returns a copy of entity's transform matrix.
+  auto GetRotationMatrix()        const -> math::Matrix4x4;
 
-  // Returns a pointer to an array of mesh verts.
+  // Returns a pointer to an array of mesh verts
+  // and assings it's count to a given pointer.
   // (SHOULD BE DELETED BY USER)
   virtual auto GetVerts(int*)     const -> math::Vec3* = 0;
 
-  // Returns a pointer to an array of mesh uv coords.
+  // Returns a pointer to an array of mesh uv coords
+  // and assings it's count to a given pointer.
   // (SHOULDN'T BE DELETED BY USER)
   virtual auto GetUVCoords(int*)  const -> const math::Vec2* = 0;
 
-  // Returns a pointer to an array of mesh triangles.
+  // Returns a pointer to an array of mesh normals
+  // and assings it's count to a given pointer.
+  // (SHOULD BE DELETED BY USER)
+  virtual auto GetNormals(int*)   const -> math::Vec3* = 0;
+
+  // Returns a pointer to an array of mesh triangles
+  // and assings it's count to a given pointer.
   // (SHOULDN'T BE DELETED BY USER)
   virtual auto GetTriangles(int*) const -> const Triangle* = 0;
 

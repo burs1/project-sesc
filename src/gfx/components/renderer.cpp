@@ -19,4 +19,9 @@ auto Renderer::GetTransformMatrix() const -> math::Matrix4x4 {
 }
 
 
+auto Renderer::GetRotationMatrix() const -> math::Matrix4x4 {
+  return entity->transform->GetRotationMatrix();
+}
+
+
 }

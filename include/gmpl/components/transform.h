@@ -21,41 +21,46 @@ friend Scene;
   auto SetScale(math::Vec3)    -> void;
 
   // Returns current transform position.
-  auto GetPosition()     const -> math::Vec3;
+  auto GetPosition()        const -> math::Vec3;
 
   // Returns current transform rotation.
-  auto GetRotation()     const -> math::Vec3;
+  auto GetRotation()        const -> math::Vec3;
 
   // Returns current transform scale.
-  auto GetScale()        const -> math::Vec3;
+  auto GetScale()           const -> math::Vec3;
 
   // Returns transform matrix.
-  auto GetTransformMatrix() -> math::Matrix4x4;
+  auto GetTransformMatrix()  -> math::Matrix4x4;
+
+  // Returns rotation matrix.
+  auto GetRotationMatrix()   -> math::Matrix4x4;
 
   // Translates transform with a given translation.
-  auto Translate(math::Vec3)   -> void;
+  auto Translate(math::Vec3) -> void;
 
   // Rotates transform with a given rotation.
-  auto Rotate(math::Vec3)      -> void;
+  auto Rotate(math::Vec3)    -> void;
 
   // Rescales transform with a given scaling.
-  auto Rescale(math::Vec3)     -> void;
+  auto Rescale(math::Vec3)   -> void;
 
   // Returns world vector that points forward in this transform basis.
   auto Forward() -> math::Vec3;
 
   // Returns world vector that points right in this transform basis.
-  auto Right() -> math::Vec3;
+  auto Right()   -> math::Vec3;
 
   // Returns world vector that points up in this transform basis.
-  auto Up() -> math::Vec3;
+  auto Up()      -> math::Vec3;
 
 private:
   // Updates rotation map if needed.
-  auto UpdateRotmat() -> void;
+  auto UpdateRotmat()    -> void;
+
 
   // Updates transform map if needed.
   auto UpdateTransfmat() -> void;
+
 
   math::Vec3 pos_, rot_, scale_ = math::Vec3(1.0f, 1.0f, 1.0f);
   math::Matrix4x4 rotmat_, transfmat_;

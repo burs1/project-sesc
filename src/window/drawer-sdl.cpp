@@ -26,8 +26,6 @@ DrawerSDL::DrawerSDL(SDL_Window* sdl_window)
   // Check if renderer was successfully created
   if (sdl_renderer_ == NULL) 
     throw std::runtime_error(SDL_GetError());
-
-  SDL_RenderSetLogicalSize(sdl_renderer_, 320, 180);
 }
 
 
@@ -47,7 +45,6 @@ DrawerSDL::~DrawerSDL()
 }
 
 
-// - Methods -
 auto DrawerSDL::Present() -> void 
 {
   SDL_RenderPresent(sdl_renderer_);
@@ -64,12 +61,12 @@ auto DrawerSDL::Present() -> void
 }
 
 
-auto DrawerSDL::LoadTexture(const char *file, const char *name) -> void 
+auto DrawerSDL::LoadTexture(std::string file, std::string name) -> void 
 {
   if (textures_.contains(name)) 
-    throw std::runtime_error("Sprite with name \"" + std::string(name) + "\" already exists");
+    throw std::runtime_error("Sprite with name \"" + name + "\" already exists");
 
-  SDL_Texture *texture = IMG_LoadTexture(sdl_renderer_, file);
+  SDL_Texture *texture = IMG_LoadTexture(sdl_renderer_, file.c_str());
   
   // Check if texture was successfuly loaded
   if (texture == NULL) 
@@ -79,17 +76,17 @@ auto DrawerSDL::LoadTexture(const char *file, const char *name) -> void
 }
 
 
-auto DrawerSDL::UnloadTexture(const char *name) -> void {
+auto DrawerSDL::UnloadTexture(std::string name) -> void {
   delete textures_[name]; textures_.erase(name);
 }
 
 
-auto DrawerSDL::LoadFont(const char *file, const char *name, int size) -> void
+auto DrawerSDL::LoadFont(std::string file, std::string name, int size) -> void
 {
   if (fonts_.contains(name)) 
-    throw std::runtime_error("Font with name \"" + std::string(name) + "\" already has been loaded");
+    throw std::runtime_error("Font with name \"" + name + "\" already has been loaded");
 
-  fonts_[name] = TTF_OpenFont(file, size);
+  fonts_[name] = TTF_OpenFont(file.c_str(), size);
 
   // Check if font was successfully loaded
   if (fonts_[name] == NULL) 
@@ -97,8 +94,9 @@ auto DrawerSDL::LoadFont(const char *file, const char *name, int size) -> void
 }
 
 
-auto DrawerSDL::UnloadFont(const char *name) -> void { 
-  TTF_CloseFont(fonts_[name]); fonts_.erase(name);
+auto DrawerSDL::UnloadFont(std::string name) -> void { 
+  TTF_CloseFont(fonts_[name]);
+  fonts_.erase(name);
 }
 
 
@@ -113,15 +111,13 @@ auto DrawerSDL::SetDrawColor(Uint8 r, Uint8 g, Uint8 b) -> void {
 }
 
 
-auto DrawerSDL::SetDrawFont(const char *name) -> void {
+auto DrawerSDL::SetDrawFont(std::string name) -> void {
   draw_font_ = name;
 }
 
 
 auto DrawerSDL::GetResolution(int *width, int *height) -> void {
   SDL_GetWindowSize(sdl_window_, width, height);
-  *width /= 4;
-  *height /= 4;
 }
 
 
@@ -133,7 +129,7 @@ auto DrawerSDL::GetAspectRatio() -> float
 }
 
 
-auto DrawerSDL::GetTexture(const char *name) -> const Texture* {
+auto DrawerSDL::GetTexture(std::string name) -> const Texture* {
   return textures_[name];
 }
 
@@ -206,7 +202,7 @@ auto DrawerSDL::DrawRect(int x1, int y1, int x2, int y2, bool fill) -> void
 }
 
 
-auto DrawerSDL::DrawTexture(int x, int y, const char *name,
+auto DrawerSDL::DrawTexture(int x, int y, std::string name,
                             float xscale, float yscale) -> void 
 {
   Texture* texture = textures_[name];
@@ -222,7 +218,7 @@ auto DrawerSDL::DrawTexture(int x, int y, const char *name,
 }
 
 auto DrawerSDL::DrawTextureEx(
-    int x, int y, const char *name,
+    int x, int y, std::string name,
     float xscale, float yscale, float angle,
     int h_align, int v_align) -> void 
 {
@@ -298,7 +294,7 @@ auto DrawerSDL::RenderText(const std::string &text,
 
 // Internal methods
 // ~ Render
-auto DrawerSDL::RenderTextSDL(const char *text, const char *font_name,
+auto DrawerSDL::RenderTextSDL(std::string text, std::string font_name,
                               SDL_Rect* rect) -> SDL_Texture* 
 {
   SDL_Color draw_color;
@@ -311,7 +307,7 @@ auto DrawerSDL::RenderTextSDL(const char *text, const char *font_name,
 
   SDL_Surface *textsurf = TTF_RenderUTF8_Solid(
                             fonts_[draw_font_],
-                            text,
+                            text.c_str(),
                             draw_color);
 
   SDL_Texture *texture = SDL_CreateTextureFromSurface(sdl_renderer_, textsurf);

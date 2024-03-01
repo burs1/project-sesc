@@ -16,12 +16,12 @@ void Audio::SetGlobalVolume(float volume) {
 }
 
 
-void Audio::LoadSound(const char* file, const char* sound_name) 
+void Audio::LoadSound(std::string file, std::string sound_name) 
 {
   if (sounds_.contains(sound_name)) 
-    throw std::runtime_error("Sound with name \"" + std::string(sound_name) + "\" already has been loaded.");
+    throw std::runtime_error("Sound with name \"" + sound_name + "\" already has been loaded.");
 
-  sounds_[sound_name] = Mix_LoadWAV(file);
+  sounds_[sound_name] = Mix_LoadWAV(file.c_str());
 
   // Check if sound was successfully loaded
   if (sounds_[sound_name] == NULL) 
@@ -29,14 +29,14 @@ void Audio::LoadSound(const char* file, const char* sound_name)
 }
 
 
-auto Audio::UnloadSound(const char* sound_name) -> void
+auto Audio::UnloadSound(std::string sound_name) -> void
 {
   Mix_FreeChunk(sounds_[sound_name]);
   sounds_.erase(sound_name);
 }
 
 
-auto Audio::PlaySound(const char* sound_name, float volume,
+auto Audio::PlaySound(std::string sound_name, float volume,
                       float pan, float pitch) -> void
 {
   int channel = Mix_PlayChannel(-1, sounds_[sound_name], 0);
@@ -47,7 +47,7 @@ auto Audio::PlaySound(const char* sound_name, float volume,
     (pan < 0 ? 255 * (1 + pan) : 255));
 }
 
-auto Audio::PlaySound3D(const char* sound_name, math::Vec3 pos,
+auto Audio::PlaySound3D(std::string sound_name, math::Vec3 pos,
                         float range, float volume) -> void 
 {
   int channel = Mix_PlayChannel(-1, sounds_[sound_name], 0);

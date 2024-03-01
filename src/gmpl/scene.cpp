@@ -35,7 +35,8 @@ auto Scene::GetContextWindow() -> window::Window* {
 }
 
 
-auto Scene::UpdateComponents() -> void {
+auto Scene::UpdateComponents(float delta_time) -> void {
+  delta_time_ = delta_time;
   for (auto [id, component] : dynamic_components_)
     component->OnUpdate();
 }

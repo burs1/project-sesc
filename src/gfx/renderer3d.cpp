@@ -39,7 +39,7 @@ Renderer3D::~Renderer3D()
 
 // Methods
 // ~ Resources
-auto Renderer3D::LoadMesh(const char* file, const char* mesh_name) -> void
+auto Renderer3D::LoadMesh(std::string file, std::string mesh_name) -> void
 {
   // Check if mesh with such name already exists
   if (meshes_.contains(mesh_name))
@@ -48,9 +48,16 @@ auto Renderer3D::LoadMesh(const char* file, const char* mesh_name) -> void
 }
 
 
-auto Renderer3D::UnloadMesh(const char* mesh_name) -> void {
+auto Renderer3D::UnloadMesh(std::string mesh_name) -> void {
   delete meshes_[mesh_name];
   meshes_.erase(mesh_name);
+}
+
+
+auto Renderer3D::GetMesh(std::string mesh_name) -> Mesh* {
+  if (not meshes_.contains(mesh_name))
+    throw std::runtime_error("Mesh with name \"" + std::string(mesh_name) + "\" doesn't exists.");
+  return meshes_[mesh_name];
 }
 
 
@@ -143,22 +150,21 @@ auto Renderer3D::SetRendererComponentsMap(
 
 auto Renderer3D::CalcViewMatrix() -> void
 {
-  math::Matrix4x4 rotmat;
-
   if (not camera_.rot) {
     math::Vec3 default_rot(0.0f, 0.0f, 0.0f);
-    rotmat.SetRotation(default_rot);
+    view_rotmat_.SetRotation(default_rot);
   }
-  else { rotmat.SetRotation(*camera_.rot); }
+  else
+    view_rotmat_.SetRotation(*camera_.rot);
 
   if (not camera_.pos) {
     math::Vec3 default_pos(0.0f, 0.0f, 0.0f);
     viewmat_.LookAt(
-      default_pos, default_pos + rotmat.Forward(), rotmat.Up());
+      default_pos, default_pos + view_rotmat_.Forward(), view_rotmat_.Up());
   }
   else
     viewmat_.LookAt(
-      *camera_.pos, *camera_.pos + rotmat.Forward(), rotmat.Up());
+      *camera_.pos, *camera_.pos + view_rotmat_.Forward(), view_rotmat_.Up());
 }
 
 
@@ -166,18 +172,43 @@ auto Renderer3D::ProcessTriangles(
     const Renderer* renderer,
     std::vector<RawTriangle>& triangles_to_draw) -> void
 {
-  math::Matrix4x4 transfmat = renderer->GetTransformMatrix();
-
+  auto transfmat = renderer->GetTransformMatrix();
+  auto rotmat    = renderer->GetRotationMatrix();
+              
   // Copy and transform verts
   int verts_count;
   math::Vec3* transformed_verts = renderer->GetVerts(&verts_count);
-  for (int i=0; i<verts_count; ++i)
-    transformed_verts[i] *= transfmat;
+  std::transform(
+    transformed_verts, transformed_verts + verts_count,
+    transformed_verts,
+    [&](auto v) { return v * transfmat; }
+  );
 
-  // Copy and transform all verts to view basis
+  // Copy and transform normals 
+  int normals_count;
+  math::Vec3* transformed_normals = renderer->GetNormals(&normals_count);
+  std::transform(
+    transformed_normals, transformed_normals + normals_count,
+    transformed_normals,
+    // Change transf mat to ratation matrix
+    [&](auto v) { return v * rotmat; }
+  );
+
+  // Copy and transform verts to view basis
   math::Vec3* viewed_verts = new math::Vec3[verts_count];
-  for (int i=0; i < verts_count; ++i)
-    viewed_verts[i] = transformed_verts[i] * viewmat_;
+  std::transform(
+    transformed_verts, transformed_verts + verts_count,
+    viewed_verts,
+    [&](auto v) { return v * viewmat_; }
+  );
+
+  // Copy and transform normals to view basis
+  math::Vec3* viewed_normals = new math::Vec3[normals_count];
+  std::transform(
+    transformed_normals, transformed_normals + normals_count,
+    viewed_normals,
+    [&](auto v) { return v * viewmat_; }
+  );
 
   // Copy uv coords (POINTER SHOULDN'T BE DELETED)
   int uv_coords_count;
@@ -193,24 +224,18 @@ auto Renderer3D::ProcessTriangles(
       triangles[i].verts_ids[0],
       triangles[i].verts_ids[1],
       triangles[i].verts_ids[2]};
+    int normal_id = triangles[i].normal_id;
 
     // Skip face if it's normal points at opposite side
-    math::Vec3 normal = math::Vec3::Cross(
-        viewed_verts[ verts_ids[1] ] - viewed_verts[ verts_ids[0] ],
-        viewed_verts[ verts_ids[2] ] - viewed_verts[ verts_ids[0] ]);
+    float dot_product = math::Vec3::Dot(viewed_normals[ normal_id ],
+                                        viewmat_.Forward());
+    if (dot_product > 0.0f) { continue; }
 
-    if (math::Vec3::Dot(normal, viewed_verts[ verts_ids[0] ]) > 0.0f)
-      continue;
-
-    // Calc light
+    // Calc light brightness
     float lightk = 1.0f;
-    if (not renderer->IsLightIgnored()) {
-      normal = math::Vec3::Cross(
-          transformed_verts[ verts_ids[1] ] - transformed_verts[ verts_ids[0] ],
-          transformed_verts[ verts_ids[2] ] - transformed_verts[ verts_ids[0] ]);
-      normal.Normalize();
-      lightk = (1 + math::Vec3::Dot(normal, sun_direction_)) / 2;
-    }
+    if (not renderer->IsLightIgnored())
+      lightk = (1 + math::Vec3::Dot(transformed_normals[ normal_id ],
+                                    sun_direction_)) / 2;
 
     triangles_to_draw.push_back(
       RawTriangle{
@@ -236,7 +261,9 @@ auto Renderer3D::ProcessTriangles(
 
   // Clean up
   delete [] transformed_verts;
+  delete [] transformed_normals;
   delete [] viewed_verts;
+  delete [] viewed_normals;
 }
 
 auto Renderer3D::SortTriangles(std::vector<RawTriangle>& triangles) -> void

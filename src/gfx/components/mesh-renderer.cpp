@@ -13,17 +13,22 @@ auto MeshRenderer::SetMesh(gfx::Mesh* new_mesh) -> void {
 }
 
 
-auto MeshRenderer::GetVerts(int* verts_count) const -> math::Vec3* {
+auto MeshRenderer::GetVerts(int *verts_count) const -> math::Vec3* {
   return mesh_->GetVerts(verts_count);
 }
 
 
-auto MeshRenderer::GetUVCoords(int* uv_coords_count) const -> const math::Vec2* {
+auto MeshRenderer::GetUVCoords(int *uv_coords_count) const -> const math::Vec2* {
   return mesh_->GetUVCoords(uv_coords_count);
 }
 
 
-auto MeshRenderer::GetTriangles(int* triangles_count) const -> const Triangle* {
+auto MeshRenderer::GetNormals(int *normals_count) const -> math::Vec3* {
+  return mesh_->GetNormals(normals_count);
+}
+
+
+auto MeshRenderer::GetTriangles(int *triangles_count) const -> const Triangle* {
   return mesh_->GetTriangles(triangles_count);
 }
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "gmpl/scene.h"
 #include "window/window.h"
 #include "gfx/renderer3d.h"
@@ -8,7 +10,7 @@ namespace eng::app {
 
 class App {
  public:
-  App(const char*);
+  App(std::string wad_file="assets/wad/default.wad");
   ~App();
 
   // This method calls before the initialisation of all engine systems.
@@ -25,13 +27,13 @@ class App {
   // systems deinitialised.
   virtual auto OnDestroy() -> void {}
 
-private:
+ private:
   // Starts main game loop and stays in cycle until
   // window close is requested.
   auto MainLoop() -> void;
 
-  // Load assets from specified directory.
-  auto LoadAssets(const char*) -> void;
+  // Load assets using WAD file.
+  auto LoadAssets(std::string) -> void;
 
   gmpl::Scene* scene_;
   window::Window* window_;

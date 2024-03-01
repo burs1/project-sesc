@@ -16,11 +16,13 @@ friend Scene;
   auto SetTexture(const window::Texture*) -> void;
 
   // Sets mesh texture to a given.
-  auto SetMesh(gfx::Mesh*)          -> void;
+  auto SetMesh(gfx::Mesh*)                -> void;
 
   auto GetVerts(int*)     const -> math::Vec3* override;
 
   auto GetUVCoords(int*)  const -> const math::Vec2* override;
+
+  auto GetNormals(int*)   const -> math::Vec3* override;
 
   auto GetTriangles(int*) const -> const Triangle* override;
 

@@ -3,7 +3,8 @@ set(SOURCE_FILES
   component.cpp
   entity.cpp
   scene.cpp
-  components/transform.cpp)
+  components/transform.cpp
+  components/utils.cpp)
 set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 
 # add lib 

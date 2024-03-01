@@ -1,7 +1,6 @@
 #include "math/vec3.h"
 #include "math/matrix4x4.h"
 #include "gmpl/components/transform.h"
-#include "logger/logger.h"
 
 namespace eng::gmpl {
 
@@ -42,6 +41,12 @@ auto Transform::GetScale() const -> math::Vec3 {
 auto Transform::GetTransformMatrix() -> math::Matrix4x4 {
   UpdateTransfmat();
   return transfmat_;
+}
+
+
+auto Transform::GetRotationMatrix() -> math::Matrix4x4 {
+  UpdateRotmat();
+  return rotmat_;
 }
 
 

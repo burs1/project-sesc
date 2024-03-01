@@ -22,18 +22,18 @@ public:
 
   // Loads a file into a Texture object and inserts it in map
   // with given name.
-  virtual auto LoadTexture(const char *file, const char *name) -> void = 0;
+  virtual auto LoadTexture(std::string file, std::string name) -> void = 0;
 
   // Unloads a Texture object by it's name.
-  virtual auto UnloadTexture(const char*)                      -> void = 0;
+  virtual auto UnloadTexture(std::string)                      -> void = 0;
 
   // Loads a file into a Font object and inserts it in map
   // with given name.
-  virtual auto LoadFont(const char *file, const char *name,
+  virtual auto LoadFont(std::string file, std::string name,
                         int size) -> void = 0;
 
   // Unloads a Font object by it's name.
-  virtual auto UnloadFont(const char*)               -> void = 0;
+  virtual auto UnloadFont(std::string)               -> void = 0;
 
   // Sets frame clear color.
   virtual auto SetClearColor(Uint8, Uint8, Uint8)    -> void = 0;
@@ -42,7 +42,7 @@ public:
   virtual auto SetDrawColor(Uint8, Uint8, Uint8)     -> void = 0;
 
   // Sets current style font.
-  virtual auto SetDrawFont(const char*)              -> void = 0;
+  virtual auto SetDrawFont(std::string)              -> void = 0;
 
   // Assigns frame width and hight in pixels to passed pointers.
   virtual auto GetResolution(int*, int*)             -> void = 0;
@@ -51,7 +51,7 @@ public:
   virtual auto GetAspectRatio()                      -> float = 0;
 
   // Returns a pointer to a Texture object by it's name.
-  virtual auto GetTexture(const char*)               -> const Texture* = 0;
+  virtual auto GetTexture(std::string)               -> const Texture* = 0;
 
   // Draws a pixel at the given point in the frame. 
   // Coordinates are indicated in pixels.
@@ -117,13 +117,13 @@ public:
 
   // Draws a Texture object specified by name at the given
   // point with the given scale. Coordinates are indicated in pixels.
-  virtual auto DrawTexture(int x, int y, const char*,
+  virtual auto DrawTexture(int x, int y, std::string,
                            float xscale, float yscale) -> void = 0;
 
   // Draws a Texture object specified by name at the given
   // point with the given scale. Coordinates are normalised and indicated
   // in value between -1.0 and 1.0.
-  virtual auto DrawTextureN(float x, float y, const char*,
+  virtual auto DrawTextureN(float x, float y, std::string,
                             float xscale, float yscale) -> void = 0;
   
   // Draws a Texture object specified by name at the given
@@ -131,7 +131,7 @@ public:
   // Horizontal align can be set with 0 (left), 1 (center) or 2 (right).
   // Vertical align can be set with 0 (up), 1 (middle) or 2 (down).
   // Coordinates are indicated in pixels.
-  virtual auto DrawTextureEx(int x, int y, const char*,
+  virtual auto DrawTextureEx(int x, int y, std::string,
                              float xscale, float yscale, float angle,
                              int halign=0, int valign=0) -> void = 0;
 
@@ -140,7 +140,7 @@ public:
   // Horizontal align can be set with 0 (left), 1 (center) or 2 (right).
   // Vertical align can be set with 0 (up), 1 (middle) or 2 (down).
   // Coordinates are normalised and indicated in value between -1.0 and 1.0.
-  virtual auto DrawTextureExN(float x, float y, const char*,
+  virtual auto DrawTextureExN(float x, float y, std::string,
                               float xscale, float yscale, float angle,
                               int halign=0, int valign=0) -> void = 0;
 

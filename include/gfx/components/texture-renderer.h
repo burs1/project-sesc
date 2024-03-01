@@ -19,6 +19,8 @@ friend Scene;
 
   auto GetUVCoords(int*)      const -> const math::Vec2* override;
 
+  auto GetNormals(int*)       const -> math::Vec3* override;
+
   auto GetTriangles(int*)     const -> const Triangle* override;
 
   auto GetTexture()           const -> const window::Texture* override;
@@ -30,6 +32,7 @@ private:
 
   math::Vec3* verts_     = nullptr;
   math::Vec2* uv_coords_ = nullptr;
+  math::Vec3* normals_   = nullptr;
   Triangle*   triangles_ = nullptr;
   const window::Texture* texture_ = nullptr;
 };
