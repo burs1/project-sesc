@@ -10,6 +10,7 @@ add_subdirectory(gfx)
 add_subdirectory(gmpl)
 add_subdirectory(math)
 add_subdirectory(window)
+add_subdirectory(ini_parser)
 
 # add lib
 add_library(Engine null.cpp)
@@ -25,5 +26,6 @@ target_link_libraries(
   PUBLIC Window
   PUBLIC Gameplay
   PUBLIC AdvMath
+  PUBLIC AdvParser
   PUBLIC spdlog::spdlog
 )

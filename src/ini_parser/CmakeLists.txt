@@ -1,0 +1,11 @@
+# ~ add target
+add_library(
+  AdvParser
+  ini_parser.cpp
+  )
+  
+# ~ include directories
+include_directories(
+  AdvParser
+  PUBLIC ${CMAKE_SOURCE_DIR}/include
+  )

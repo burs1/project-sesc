@@ -13,6 +13,7 @@
 #include "window/window.h"
 #include "gfx/renderer3d.h"
 #include "logger/logger.h"
+#include "ini_parser/ini_parser.h"
 
 namespace eng::app {
 
@@ -64,6 +65,9 @@ App::~App() {
 auto App::MainLoop() -> void {
   log::Info("Entering main game loop");
 
+  IniParser().parseIniFile("assets/ini_files/advanced.ini");
+
+  IniParser().printIniData();
   // Refresh rate controll
   Uint32 last_update_time = window_->GetTicks();
   Uint32 next_update_time = last_update_time;
